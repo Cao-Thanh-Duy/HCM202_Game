@@ -67,26 +67,32 @@ q,A,B,C,D,answer,quote
 - Mỗi người **tự trả lời câu hỏi theo nhịp riêng** (panel bên phải, phím 1–4), trả lời liên tục để tích stamina rồi đi một lượt. Thứ tự câu xáo riêng từng người.
 - Panel thu gọn bằng **Q**; **hết stamina thì panel tự bật lên**. Khung hướng dẫn góc trái ẩn/hiện bằng **H**.
 - Đuốc sáng/tắt liên tục suốt ván. Đi khi đuốc tắt → **về khu (checkpoint) gần nhất đã vào**, chưa vào khu nào → **về vạch xuất phát**.
-- Khu 1–3: đứng trong khu khi trả lời đúng được **+5 stamina**, đi nhanh hơn **10%**, và **lưu checkpoint**.
+- **Map chữ S dài 200m** (`shared/path.ts`): đi tự do WASD trong lòng đường, camera xoay theo khúc cua, W luôn là "tiến theo đường".
+- Khu 1/2/3: đứng trong khu khi trả lời đúng được **+5 / +7 / +10 stamina**, đi nhanh hơn **10%**, và **lưu checkpoint**.
+- **Cạm bẫy** (server random mỗi phòng): 💣 bom → về checkpoint (chưa có → vạch xuất phát); 🚧 hàng rào chắn nửa đường → mất 50% stamina (mỗi hàng rào phạt 1 lần, bị đưa về sau thì tính lại).
+- Ngân hàng **30 câu**, phát xoay vòng không giới hạn.
 - **Âm thanh chỉ phát ở máy host**: nhạc nền `client/public/sound/lobby.mp3` (sảnh/kết quả) và `ingame.mp3` (trong ván), hiệu ứng tổng hợp WebAudio. Có nút 🔊 + 2 thanh kéo 🎵 nhạc / 💥 hiệu ứng ở sảnh và trong ván. ⏹ để kết thúc sớm.
 
 Tất cả thông số nằm trong **`shared/config.ts`**:
 
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
-| `MAP_LENGTH` | 150 | Độ dài map (m) |
+| `MAP_LENGTH` | 200 | Độ dài đường chữ S (m) |
+| `ROAD_HALF_WIDTH` | 8 | Nửa bề rộng đường (m) |
+| `BOMBS / FENCES` | 10 / 7 | Số bom / hàng rào mỗi phòng |
+| `FENCE_STAMINA_MUL` | 0.5 | Đâm hàng rào còn 50% stamina |
 | `BASE_SPEED` | 2 | m/s. Chậm có chủ đích để stamina vắt qua lúc đuốc tắt |
 | `STAMINA_MAX_Q / MIN_Q` | 10 / 5 | Stamina khi đúng (nhanh → chậm) |
 | `QUESTION_MS` | 20s | Thời gian mỗi câu; hết giờ panel tự đóng, mở lại (Q) ra câu khác |
 | `SPEED_WINDOW_MS` | 20s | Thưởng nhanh giảm dần trong khoảng này |
 | `RESULT_MS` | 1.8s | Hiện đúng/sai + trích dẫn trước khi sang câu kế |
-| `ZONE_STAMINA_BONUS / SPEED_BONUS` | 5 / 10% | Thưởng khi đứng trong khu |
+| `ZONES[].bonus` / `ZONE_SPEED_BONUS` | 5·7·10 / 10% | Thưởng khi đứng trong khu |
 | `GAME_MS` | 10 phút | Thời lượng 1 ván |
 | `TORCH_ON_MS` | 7s / 10s / 15s | Đuốc sáng: random 1 trong 3 mốc |
 | `TORCH_OFF_MS` | 2–4s | Đuốc tắt: random trong khoảng |
 | `TORCH_DIM_MS` | 1000 | Đuốc tối dần trước khi tắt |
 | `GRACE_MS / MAX_LAG_COMP_MS` | 250 / 200 | Dung sai + bù ping tối đa |
-| `ZONES` | 3 khu | Vị trí, tên, màu; cũng là checkpoint |
+| `ZONES` | 3 khu | Vị trí theo đường (s, d), màu, thưởng; cũng là checkpoint |
 
 > QR dùng địa chỉ trang host đang mở. Chạy local thì QR là `localhost` (máy khác không quét được) → test bằng IP LAN hoặc deploy Railway.
 
@@ -94,6 +100,7 @@ Tất cả thông số nằm trong **`shared/config.ts`**:
 
 ```
 shared/config.ts         luật game + khu + màu đội
+shared/path.ts           hình học đường chữ S: chiếu (s,d), kẹp mép, khu, điểm hồi sinh
 server/src/index.ts      Express + Colyseus, /health, phục vụ client/dist
 server/src/TorchRoom.ts  phòng chơi: câu hỏi riêng từng người, stamina, đuốc, phạm luật, checkpoint
 server/src/schema.ts     state đồng bộ

@@ -1,7 +1,8 @@
 import { Room, Client, Delayed } from '@colyseus/core';
-import { GameState, Player } from './schema';
+import { GameState, Player, Trap } from './schema';
 import { DEFAULT_QUESTIONS, sanitize, Question } from './questions';
-import { CFG, ZONES, zoneAt, respawnOf, TEAM_COLORS } from '../../shared/config';
+import { CFG, ZONES, TEAM_COLORS } from '../../shared/config';
+import { toWorld, clampToRoad, zoneAtSD, respawnOf, project } from '../../shared/path';
 
 const usedCodes = new Set<string>();
 const rand = ([a, b]: [number, number]) => a + Math.random() * (b - a);
@@ -31,6 +32,9 @@ export class TorchRoom extends Room<GameState> {
   endTimer?: Delayed;
   offAt = 0;
   finishCount = 0;
+  immune = new Map<string, number>();             // miễn bẫy tới thời điểm (ms)
+  fenceHits = new Map<string, Set<number>>();     // hàng rào đã đâm (mỗi cái chỉ phạt 1 lần, reset khi bị đưa về sau)
+  bombPos: { x: number; z: number }[] = [];
   colorIdx = 0;
 
   onCreate() {
@@ -40,6 +44,7 @@ export class TorchRoom extends Room<GameState> {
     this.roomId = code;              // mã phòng = roomId -> client dùng joinById(code)
     this.state.code = code;
     this.state.total = this.questions.length;
+    this.genTraps();
     this.setPatchRate(CFG.TICK_MS);
     this.setSimulationInterval(dt => this.tick(dt), CFG.TICK_MS);
 
@@ -72,7 +77,9 @@ export class TorchRoom extends Room<GameState> {
     const p = new Player();
     p.name = String(opts.name || 'Nhóm ?').slice(0, 16);
     p.color = this.colorIdx++ % TEAM_COLORS.length;
-    p.z = (Math.random() - 0.5) * 24; // rải ở vạch xuất phát cho khỏi chồng nhau
+    const sp = toWorld(0.5, (Math.random() - 0.5) * 12); // rải ngang vạch xuất phát cho khỏi chồng nhau
+    p.x = sp.x; p.z = sp.z;
+    this.fenceHits.set(c.sessionId, new Set());
     this.state.players.set(c.sessionId, p);
     this.priv.set(c.sessionId, this.newPriv());
     if (this.state.phase === 'play') this.sendQuestion(c); // vào muộn vẫn chơi được
@@ -160,7 +167,7 @@ export class TorchRoom extends Room<GameState> {
     if (choice === Q.a) {
       const t = Math.min(1, (Date.now() - pv.shownAt) / CFG.SPEED_WINDOW_MS);
       gain = Math.round(CFG.STAMINA_MIN_Q + (CFG.STAMINA_MAX_Q - CFG.STAMINA_MIN_Q) * (1 - t));
-      if (p.zone) gain += CFG.ZONE_STAMINA_BONUS; // thưởng khu tính theo vị trí LÚC trả lời
+      if (p.zone) gain += ZONES[p.zone - 1].bonus; // thưởng khu (5/7/10) tính theo vị trí LÚC trả lời
       p.qRight++;
     }
     p.stamina += gain;
@@ -204,14 +211,16 @@ export class TorchRoom extends Room<GameState> {
         const speed = CFG.BASE_SPEED * (p.zone ? 1 + CFG.ZONE_SPEED_BONUS : 1);
         const step = Math.min(speed * sec, p.stamina);
         const ox = p.x, oz = p.z;
-        p.x = Math.max(0, Math.min(CFG.MAP_LENGTH, p.x + inp.x * step));
-        p.z = Math.max(-CFG.MAP_HALF_WIDTH, Math.min(CFG.MAP_HALF_WIDTH, p.z + inp.z * step));
-        const moved = Math.hypot(p.x - ox, p.z - oz); // trừ theo quãng THẬT (bị chặn biên thì không mất)
+        // Đi tự do 2D rồi kẹp lại trong lòng đường chữ S
+        const r = clampToRoad(p.x + inp.x * step, p.z + inp.z * step);
+        p.x = r.x; p.z = r.z; p.prog = r.s;
+        const moved = Math.hypot(p.x - ox, p.z - oz); // trừ theo quãng THẬT (bị chặn mép thì không mất)
         p.stamina = Math.max(0, p.stamina - moved);
         p.rot = Math.atan2(inp.x, inp.z);
-        p.zone = zoneAt(p.x, p.z);
+        p.zone = zoneAtSD(r.s, r.d);
         if (p.zone > p.cpZone) { p.cpZone = p.zone; this.broadcast('checkpoint', { id, zone: p.zone }); }
-        if (p.x >= CFG.MAP_LENGTH) { p.rank = ++this.finishCount; this.broadcast('finish', { id, rank: p.rank }); }
+        if (p.prog >= CFG.MAP_LENGTH - 0.3) { p.rank = ++this.finishCount; this.broadcast('finish', { id, rank: p.rank }); return; }
+        if (now > (this.immune.get(id) ?? 0)) this.checkTraps(p, id, r.s, r.d);
       }
 
       // Luật đuốc: deadline riêng từng người = lúc tắt + grace + bù ping (có trần)
@@ -221,8 +230,7 @@ export class TorchRoom extends Room<GameState> {
         const sp = this.snap.get(id);
         if (!sp) { this.snap.set(id, { x: p.x, z: p.z }); return; }
         if (Math.hypot(p.x - sp.x, p.z - sp.z) > CFG.MOVE_EPS) {
-          const r = respawnOf(p.cpZone); // về khu đã vào gần nhất, chưa vào khu nào -> vạch xuất phát
-          p.x = r.x; p.z = r.z; p.zone = zoneAt(p.x, p.z);
+          this.respawn(p, id);
           p.stunned = true; p.caught++;
           this.broadcast('caught', { id, cpZone: p.cpZone });
         }
@@ -235,10 +243,62 @@ export class TorchRoom extends Room<GameState> {
     if (done) this.endGame();
   }
 
+  // ---------------- TRAPS ----------------
+  // Random vị trí bẫy mỗi phòng: tránh vạch xuất phát/đích, tránh 3 khu, các bẫy không sát nhau
+  genTraps() {
+    const L = CFG.MAP_LENGTH, HW = CFG.ROAD_HALF_WIDTH, used: number[] = [];
+    const free = (s: number, gap: number) => !ZONES.some(z => s > z.s0 - 4 && s < z.s1 + 4) && used.every(u => Math.abs(u - s) > gap);
+    const pick = (gap: number) => { for (let k = 0; k < 200; k++) { const s = 15 + Math.random() * (L - 30); if (free(s, gap)) { used.push(s); return s; } } return -1; };
+    for (let i = 0; i < CFG.FENCES; i++) {
+      const s = pick(10); if (s < 0) continue;
+      const t = new Trap(); t.kind = 'fence'; t.s = s;
+      // Chắn nửa đường (trái hoặc phải) -> luôn có lối đi vòng
+      if (i % 2) { t.d0 = -HW; t.d1 = 0.5; } else { t.d0 = -0.5; t.d1 = HW; }
+      this.state.traps.push(t);
+    }
+    for (let i = 0; i < CFG.BOMBS; i++) {
+      const s = pick(4); if (s < 0) continue;
+      const t = new Trap(); t.kind = 'bomb'; t.s = s; t.d0 = (Math.random() * 2 - 1) * (HW - 1.5);
+      this.state.traps.push(t);
+    }
+    this.bombPos = this.state.traps.map(t => (t.kind === 'bomb' ? toWorld(t.s, t.d0) : { x: NaN, z: NaN }));
+  }
+
+  checkTraps(p: Player, id: string, s: number, d: number) {
+    this.state.traps.forEach((t, i) => {
+      if (t.kind === 'bomb') {
+        const b = this.bombPos[i];
+        if (Math.hypot(p.x - b.x, p.z - b.z) < CFG.BOMB_RADIUS) {
+          this.respawn(p, id); // dính bom -> về checkpoint (chưa có -> vạch xuất phát)
+          this.broadcast('bomb', { id, i, cpZone: p.cpZone });
+        }
+      } else {
+        const hits = this.fenceHits.get(id)!;
+        if (!hits.has(i) && Math.abs(s - t.s) < 0.6 && d >= t.d0 && d <= t.d1) {
+          hits.add(i);
+          const lost = p.stamina * (1 - CFG.FENCE_STAMINA_MUL);
+          p.stamina *= CFG.FENCE_STAMINA_MUL; // đâm hàng rào -> còn 50% stamina
+          this.broadcast('fence', { id, i, lost: Math.round(lost) });
+        }
+      }
+    });
+  }
+
+  // Đưa về checkpoint + miễn bẫy ngắn; hàng rào phía trước điểm hồi sinh được tính phạt lại
+  respawn(p: Player, id: string) {
+    const r = respawnOf(p.cpZone);
+    p.x = r.x; p.z = r.z;
+    const pr = project(r.x, r.z);
+    p.prog = pr.s; p.zone = zoneAtSD(pr.s, pr.d);
+    this.immune.set(id, Date.now() + CFG.TRAP_IMMUNE_MS);
+    const hits = this.fenceHits.get(id);
+    this.state.traps.forEach((t, i) => { if (t.s > pr.s) hits?.delete(i); });
+  }
+
   exportStats() {
     const players: any[] = [];
     this.state.players.forEach(p => players.push({
-      name: p.name, x: +p.x.toFixed(1), rank: p.rank, answered: p.qDone, correct: p.qRight, caught: p.caught,
+      name: p.name, distance: +p.prog.toFixed(1), rank: p.rank, answered: p.qDone, correct: p.qRight, caught: p.caught,
     }));
     return {
       zones: ZONES.map(z => z.name),

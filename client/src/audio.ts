@@ -109,4 +109,6 @@ export const sfx = {
   start() { [392, 523, 659].forEach((f, i) => tone(f, 0.5, 'triangle', 0.25, i * 0.15)); },
   end() { [784, 659, 523, 392].forEach((f, i) => tone(f, 0.5, 'triangle', 0.25, i * 0.18)); fireGain?.gain.setTargetAtTime(0, ctx!.currentTime, 0.2); },
   join() { tone(880, 0.1, 'sine', 0.15); },
+  bomb() { noise(0.9, 120, 0.9, 0.5); tone(90, 0.8, 'sawtooth', 0.35, 0, 40); },   // nổ trầm
+  fence() { noise(0.15, 900, 0.5, 2); tone(180, 0.2, 'square', 0.2); },          // va gỗ
 };

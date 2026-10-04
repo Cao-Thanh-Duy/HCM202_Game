@@ -1,6 +1,7 @@
 // Load test: npm run bots -- <CODE> [số bot=30] [url=ws://localhost:2567]
 // Bot tự trả lời câu (ngẫu nhiên, 1–5s/câu), chạy khi đuốc sáng, ~10% bot "liều" chạy cả khi đuốc tắt.
 import { Client } from 'colyseus.js';
+import { project, pointAt } from '../../shared/path';
 
 const [code, n = '30', url = 'ws://localhost:2567'] = process.argv.slice(2);
 if (!code) { console.log('Dùng: npm run bots -- <CODE> [n] [url]'); process.exit(1); }
@@ -16,7 +17,14 @@ async function bot(i: number) {
   setInterval(() => {
     const s = room.state;
     const go = s.phase === 'play' && (s.torch === 'on' || reckless);
-    room.send('input', go ? { x: 1, z: (Math.random() - 0.5) * 0.4 } : { x: 0, z: 0 });
+    const me = s.players?.get(room.sessionId);
+    let dir = { x: 0, z: 0 };
+    if (go && me) { // đi theo đường chữ S: hướng tới điểm phía trước 4m
+      const a = pointAt(project(me.x, me.z).s + 4);
+      const dx = a.x - me.x, dz = a.z - me.z, l = Math.hypot(dx, dz) || 1;
+      dir = { x: dx / l, z: dz / l };
+    }
+    room.send('input', dir);
   }, 100);
 }
 

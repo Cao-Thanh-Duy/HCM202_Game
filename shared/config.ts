@@ -1,10 +1,9 @@
 // Config dùng chung cho server + client. Chỉnh luật game ở ĐÂY, không hardcode chỗ khác.
 export const CFG = {
-  MAP_LENGTH: 150,          // m, trục X: 0 = vạch xuất phát, 150 = đích
-  MAP_HALF_WIDTH: 15,       // m, trục Z: -15..15
+  MAP_LENGTH: 200,          // m, chiều dài đường đi (đo dọc theo đường chữ S, xem shared/path.ts)
+  ROAD_HALF_WIDTH: 8,       // m, nửa bề rộng đường đi được (đi ra ngoài sẽ bị chặn lại ở mép)
   BASE_SPEED: 2,            // m/s — ⚠️ chậm có chủ đích: 10 stamina mất ~5s, dễ vắt qua lúc đuốc tắt -> có hồi hộp
   ZONE_SPEED_BONUS: 0.1,    // +10% tốc độ khi đứng trong khu
-  ZONE_STAMINA_BONUS: 5,    // +5 stamina mỗi câu đúng khi đang đứng trong khu
   STAMINA_MAX_Q: 10,        // đúng ngay lập tức
   STAMINA_MIN_Q: 5,         // đúng sau SPEED_WINDOW_MS trở đi
   SPEED_WINDOW_MS: 20_000,  // thưởng nhanh giảm dần suốt 20s của câu (10 -> 5)
@@ -21,24 +20,23 @@ export const CFG = {
   MAX_LAG_COMP_MS: 200,     // bù ping tối đa, tránh lợi dụng lag
   MOVE_EPS: 0.1,            // m, rung tay dưới mức này không tính là di chuyển
 
+  // Cạm bẫy (server random vị trí mỗi phòng)
+  BOMBS: 10,                // số quả bom
+  FENCES: 7,                // số hàng rào (mỗi cái chắn nửa đường, đi vòng được)
+  BOMB_RADIUS: 1.3,         // m
+  FENCE_STAMINA_MUL: 0.5,   // đâm hàng rào: còn 50% stamina
+  TRAP_IMMUNE_MS: 1500,     // vừa dính bẫy / hồi sinh -> miễn bẫy 1.5s (tránh dính liên hoàn)
+
   MAX_PLAYERS: 40,
 };
 
-// 3 khu đặt lệch 2 bên đường: đi vòng tốn stamina nhưng được thưởng + làm CHECKPOINT
+// 3 khu, toạ độ theo ĐƯỜNG: s = mét tính từ vạch xuất phát, d = lệch sang phải(+)/trái(-) so với tim đường.
+// Đặt lệch 1 bên đường -> muốn ăn thưởng phải đi vòng. bonus = stamina cộng thêm mỗi câu đúng khi đứng trong khu.
 export const ZONES = [
-  { id: 1, name: 'Khu 1 · Văn hóa',   x0: 40,  x1: 60,  z0: 4,   z1: 14, color: 0xd4a017 },
-  { id: 2, name: 'Khu 2 · Đạo đức',   x0: 80,  x1: 100, z0: -14, z1: -4, color: 0xc0392b },
-  { id: 3, name: 'Khu 3 · Con người', x0: 120, x1: 140, z0: 4,   z1: 14, color: 0xb0703a },
+  { id: 1, name: 'Khu 1', s0: 50,  s1: 70,  d0: -7.5, d1: -2, color: 0xd4a017, bonus: 5 },
+  { id: 2, name: 'Khu 2', s0: 105, s1: 125, d0: 2,    d1: 7.5, color: 0xc0392b, bonus: 7 },
+  { id: 3, name: 'Khu 3', s0: 160, s1: 180, d0: -7.5, d1: -2, color: 0xb0703a, bonus: 10 },
 ];
-
-export const zoneAt = (x: number, z: number) =>
-  ZONES.find(k => x >= k.x0 && x <= k.x1 && z >= k.z0 && z <= k.z1)?.id ?? 0;
-
-// Điểm hồi sinh khi phạm luật: giữa khu đã vào gần nhất, chưa vào khu nào -> vạch xuất phát
-export const respawnOf = (cpZone: number) => {
-  const k = ZONES[cpZone - 1];
-  return k ? { x: (k.x0 + k.x1) / 2, z: (k.z0 + k.z1) / 2 } : { x: 0, z: 0 };
-};
 
 export const TEAM_COLORS = [
   0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6, 0x1abc9c, 0xe67e22, 0xecf0f1,

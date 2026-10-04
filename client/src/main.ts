@@ -1,11 +1,12 @@
 import './style.css';
 import * as THREE from 'three';
 import QRCode from 'qrcode';
-import { CFG, ZONES, TEAM_COLORS, zoneAt } from '../../shared/config';
+import { CFG, ZONES, TEAM_COLORS } from '../../shared/config';
+import { zoneAt, clampToRoad } from '../../shared/path';
 import { room, createRoom, joinRoom, tryReconnect, forgetSession, serverNow } from './net';
 // ⚠️ Đợi font Baloo 2 tải xong rồi mới dựng scene: chữ 3D vẽ bằng canvas, vẽ sớm sẽ dính font dự phòng
 await Promise.race([document.fonts.load('800 40px "Baloo 2"'), new Promise(r => setTimeout(r, 2000))]);
-const { startLoop, upsertAvatar, getAvatar, setTorch, setFollow, checkpointFx, hostCam, bindHostControls } = await import('./world');
+const { startLoop, upsertAvatar, getAvatar, setTorch, setFollow, checkpointFx, hostCam, bindHostControls, buildTraps, boomFx, fenceFx, camDir } = await import('./world');
 import { readQuestionFile } from './importer';
 import { unlock, sfx, toggleMute, music, duck, resumeOnClick, setVolume, vol } from './audio';
 
@@ -26,8 +27,9 @@ const RULES = [
   `<b>❓ Trả lời</b> (phím 1–4) bất cứ lúc nào để tích stamina: mỗi câu <b>${CFG.QUESTION_MS / 1000}s</b>, đúng nhanh <b>+${CFG.STAMINA_MAX_Q}</b>, chậm <b>+${CFG.STAMINA_MIN_Q}</b>, sai +0 · hết giờ thì bấm Q lấy câu khác`,
   `<b>🏃 WASD</b> di chuyển · 1 stamina = 1m · hết stamina tự mở câu hỏi`,
   `<b>🔥 Sáng</b>: đi · <b>⚠️ Tối dần</b> (1s): chuẩn bị dừng · <b>⛔ Tắt</b>: đứng yên`,
-  `<b>✨ Vào Khu</b> (Văn hóa · Đạo đức · Con người): <b>+${CFG.ZONE_STAMINA_BONUS}</b> stamina mỗi câu đúng khi đứng trong khu, <b>+${CFG.ZONE_SPEED_BONUS * 100}%</b> tốc độ, <b>lưu checkpoint</b>`,
-  `<b>💀 Đi khi đuốc tắt</b> → về khu gần nhất đã vào; chưa vào khu nào → <b>về vạch xuất phát</b>`,
+  `<b>✨ Đứng trong khu</b> khi trả lời đúng: ${ZONES.map(z => `<b>${z.name} +${z.bonus}⚡</b>`).join(' · ')} mỗi câu · <b>+${CFG.ZONE_SPEED_BONUS * 100}%</b> tốc độ · <b>lưu checkpoint</b>`,
+  `<b>💀 Đi khi đuốc tắt</b> hoặc <b>💣 dính bom</b> → về khu gần nhất đã vào; chưa vào khu nào → <b>về vạch xuất phát</b>`,
+  `<b>🚧 Đâm hàng rào</b> → mất <b>${(1 - CFG.FENCE_STAMINA_MUL) * 100}%</b> stamina (hàng rào chỉ chắn nửa đường, đi vòng được)`,
 ].map(r => `<div>${r}</div>`).join('');
 document.querySelectorAll('[data-rules]').forEach(el => (el.innerHTML = RULES));
 
@@ -105,6 +107,18 @@ function enter(host: boolean) {
     if (id === r.sessionId) { popup('caught', '💀 BỊ BẮT!', `Đi khi đuốc tắt → hồi sinh tại ${where}`, 2600); predInit = false; lastZone = cpZone; }
     else if (isHost) { toast(`${nameOf(id)} bị bắt → ${where}`, 1500); sfx.caught(); }
   });
+  r.onMessage('bomb', ({ id, i, cpZone }) => {
+    const where = cpZone ? ZONES[cpZone - 1].name : 'vạch xuất phát';
+    boomFx(i);
+    if (id === r.sessionId) { popup('caught', '💣 DÍNH BOM!', `Bị đưa về ${where}`, 2600); predInit = false; lastZone = cpZone; }
+    else if (isHost) toast(`💣 ${nameOf(id)} dính bom → ${where}`, 1500);
+    if (isHost) sfx.bomb();
+  });
+  r.onMessage('fence', ({ id, i, lost }) => {
+    fenceFx(i);
+    if (id === r.sessionId) popup('caught', '🚧 ĐÂM HÀNG RÀO!', `Mất ${lost} ⚡ (còn 50%)`, 2000);
+    if (isHost) sfx.fence();
+  });
   r.onMessage('checkpoint', ({ id, zone }) => {
     const p = r.state.players.get(id);
     const av = getAvatar(id)?.g; // bám theo avatar đang hiển thị (không dùng state: state đi trước avatar -> lệch chỗ)
@@ -128,6 +142,7 @@ function enter(host: boolean) {
 let lastPhase = '', lastTorch = '', lastCount = -1;
 function onState(s: any) {
   if (!s?.players) return; // state chưa giải mã xong (vừa join/reconnect)
+  if (s.traps?.length) buildTraps([...s.traps]);
   s.players.forEach((p: any, id: string) => {
     const a = upsertAvatar(id, p.name, p.color, id === room!.sessionId);
     if (id === room!.sessionId) reconcile(p); else a.target.set(p.x, 0, p.z);
@@ -233,7 +248,10 @@ function popup(kind: 'zone' | 'cp' | 'caught', title: string, sub: string, ms = 
 }
 const BANNER = { on: '🔥 ĐUỐC SÁNG · ĐI!', dim: '⚠️ ĐUỐC SẮP TẮT', off: '⛔ DỪNG LẠI!' } as const;
 let boardAt = 0;
-const zoneBonus = `+${CFG.ZONE_STAMINA_BONUS} ⚡/câu đúng · +${CFG.ZONE_SPEED_BONUS * 100}% tốc độ`;
+const zoneBonus = (z: number) => `+${ZONES[z - 1].bonus} ⚡/câu đúng · +${CFG.ZONE_SPEED_BONUS * 100}% tốc độ`;
+// Vạch 3 khu trên các thanh tiến độ: vị trí theo giữa mỗi khu / chiều dài đường
+const cpMarks = ZONES.map(z => `${(((z.s0 + z.s1) / 2) / CFG.MAP_LENGTH) * 100}%`);
+document.querySelectorAll<HTMLElement>('.progress span').forEach((el, i) => (el.style.left = cpMarks[i]));
 
 function renderHud(s: any) {
   const banner = $('torchBanner');
@@ -245,17 +263,17 @@ function renderHud(s: any) {
   const me = s.players.get(room!.sessionId);
   if (me) {
     $('hudStamina').textContent = me.stamina.toFixed(0);
-    $('hudProg').style.width = `${(me.x / CFG.MAP_LENGTH) * 100}%`;
+    $('hudProg').style.width = `${(me.prog / CFG.MAP_LENGTH) * 100}%`;
     $('hudCp').textContent = me.cpZone ? ZONES[me.cpZone - 1].name : 'Vạch xuất phát';
     document.querySelectorAll<HTMLElement>('.cpTrack [data-z]').forEach(el => {
       const z = +el.dataset.z!;
       el.classList.toggle('on', me.cpZone >= z);
       el.classList.toggle('here', el.classList.contains('node') && me.zone === z);
     });
-    $('hudZone').textContent = me.zone ? `✨ Đang trong ${ZONES[me.zone - 1].name}: +${CFG.ZONE_STAMINA_BONUS}⚡/câu · +${CFG.ZONE_SPEED_BONUS * 100}% tốc độ` : '';
+    $('hudZone').textContent = me.zone ? `✨ Đang trong ${ZONES[me.zone - 1].name}: ${zoneBonus(me.zone)}` : '';
     // Vào khu đã từng lưu checkpoint -> popup nhẹ; khu MỚI thì popup checkpoint do message 'checkpoint' của server lo
     if (me.zone !== lastZone) {
-      if (me.zone && me.zone <= me.cpZone && !me.stunned) popup('zone', `✨ ${ZONES[me.zone - 1].name}`, zoneBonus, 1800);
+      if (me.zone && me.zone <= me.cpZone && !me.stunned) popup('zone', `✨ ${ZONES[me.zone - 1].name}`, zoneBonus(me.zone), 1800);
       else if (!me.zone && lastZone) toast('Đã rời khu · hết thưởng khu', 1500);
       lastZone = me.zone;
     }
@@ -269,8 +287,8 @@ function renderHud(s: any) {
     boardAt = performance.now();
     const list = ranking(s);
     $('board').innerHTML = list.slice(0, 10).map(p =>
-      `<li style="--c:${hex(p.color)}"><b>${esc(p.name)}</b><small>${p.rank ? '🏁 về đích' : p.x.toFixed(0) + 'm'} · ${p.qDone} câu</small>`
-      + `<div class="lb"><i style="width:${Math.min(100, (p.x / CFG.MAP_LENGTH) * 100)}%"></i><u style="left:33.3%"></u><u style="left:60%"></u><u style="left:86.6%"></u></div></li>`).join('');
+      `<li style="--c:${hex(p.color)}"><b>${esc(p.name)}</b><small>${p.rank ? '🏁 về đích' : p.prog.toFixed(0) + 'm'} · ${p.qDone} câu</small>`
+      + `<div class="lb"><i style="width:${Math.min(100, (p.prog / CFG.MAP_LENGTH) * 100)}%"></i>${cpMarks.map(l => `<u style="left:${l}"></u>`).join('')}</div></li>`).join('');
     if (s.phase === 'lobby') {
       $('lobbyCount').textContent = String(list.length);
       const html = list.map(p => `<li style="--c:${hex(p.color)}">${esc(p.name)}</li>`).join('');
@@ -280,11 +298,11 @@ function renderHud(s: any) {
 }
 const ranking = (s: any) => {
   const arr: any[] = []; s.players.forEach((p: any) => arr.push(p));
-  return arr.sort((a, b) => (a.rank || 999) - (b.rank || 999) || b.x - a.x);
+  return arr.sort((a, b) => (a.rank || 999) - (b.rank || 999) || b.prog - a.prog);
 };
 function renderEnd(s: any) {
   $('endList').innerHTML = ranking(s).map((p, i) =>
-    `<tr><td>${i + 1}</td><td><span class="sw" style="background:${hex(p.color)}"></span>${esc(p.name)}</td><td>${p.rank ? `🏁 về đích (hạng ${p.rank})` : p.x.toFixed(1) + ' m'}</td><td>${p.qRight}/${p.qDone}</td><td>${p.caught}</td></tr>`).join('');
+    `<tr><td>${i + 1}</td><td><span class="sw" style="background:${hex(p.color)}"></span>${esc(p.name)}</td><td>${p.rank ? `🏁 về đích (hạng ${p.rank})` : p.prog.toFixed(1) + ' m'}</td><td>${p.qRight}/${p.qDone}</td><td>${p.caught}</td></tr>`).join('');
 }
 
 // Đồng hồ ván (giờ server) + thanh thưởng nhanh của câu hiện tại
@@ -314,13 +332,23 @@ addEventListener('keyup', e => { keys.delete(e.code); updateInput(); });
 // ⚠️ Alt-Tab khi đang giữ phím -> không nhận keyup -> nhân vật chạy mãi và bị bắt. Blur = thả hết phím.
 addEventListener('blur', () => { keys.clear(); updateInput(); });
 
+// keyIn = phím theo hướng camera (tiến/ngang); input = hướng THẾ GIỚI gửi server.
+// Đường chữ S nên camera xoay theo khúc cua -> phải quy đổi lại liên tục, không chỉ lúc bấm phím.
+const keyIn = { f: 0, r: 0 };
+let lastSent = 0;
 function updateInput() {
-  // Camera nhìn theo +X: W = tiến (+x), S = lùi, A = trái (-z), D = phải (+z)
-  const x = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
-  const z = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
-  if (x === input.x && z === input.z) return;
+  keyIn.f = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
+  keyIn.r = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+  syncInput(true);
+}
+function syncInput(force = false) {
+  // phải của camera = (-dir.z, dir.x)
+  const x = camDir.x * keyIn.f - camDir.z * keyIn.r, z = camDir.z * keyIn.f + camDir.x * keyIn.r;
+  const changed = Math.abs(x - input.x) > 0.03 || Math.abs(z - input.z) > 0.03;
   input.x = x; input.z = z;
-  if (!isHost) room?.send('input', input);
+  const now = performance.now();
+  // Gửi khi đổi phím, hoặc khi đang đi mà camera xoay (tối đa ~10 lần/giây cho nhẹ mạng)
+  if (!isHost && (force || (changed && now - lastSent > 100))) { room?.send('input', input); lastSent = now; }
 }
 
 // Client prediction cho nhân vật của mình: bấm là chạy ngay, server vẫn là trọng tài.
@@ -337,11 +365,12 @@ startLoop(dt => {
   const s = room?.state; if (!s?.players || isHost) return;
   setFollow(room!.sessionId); // ⚠️ đặt lại mỗi frame: sau reconnect/F5 camera luôn bám đúng nhân vật của mình
   const me = s.players.get(room!.sessionId); if (!me) return;
+  if (keyIn.f || keyIn.r) syncInput();
   const len = Math.hypot(input.x, input.z);
   if (s.phase === 'play' && len && !me.stunned && !me.rank && me.stamina > 0) {
     const speed = CFG.BASE_SPEED * (zoneAt(pred.x, pred.z) ? 1 + CFG.ZONE_SPEED_BONUS : 1);
-    pred.x = Math.max(0, Math.min(CFG.MAP_LENGTH, pred.x + (input.x / len) * speed * dt));
-    pred.z = Math.max(-CFG.MAP_HALF_WIDTH, Math.min(CFG.MAP_HALF_WIDTH, pred.z + (input.z / len) * speed * dt));
+    const r = clampToRoad(pred.x + (input.x / len) * speed * dt, pred.z + (input.z / len) * speed * dt); // cùng luật kẹp mép với server
+    pred.x = r.x; pred.z = r.z;
   }
   const a = getAvatar(room!.sessionId); if (a) a.target.copy(pred);
 });

@@ -218,5 +218,115 @@
     ],
     "a": 1,
     "quote": "\"Chính nghĩa là không tà, nghĩa là thẳng thắn, đứng đắn\" [GT tr.122–123]"
+  },
+  {
+    "q": "Năm 1987, tổ chức nào ghi nhận Hồ Chí Minh là \"Anh hùng giải phóng dân tộc, Nhà văn hóa kiệt xuất Việt Nam\"?",
+    "options": [
+      "UNICEF",
+      "UNESCO",
+      "WHO",
+      "ASEAN"
+    ],
+    "a": 1,
+    "quote": "Nghị quyết 24C/18.6.5 của Đại hội đồng UNESCO, khóa họp 24 (1987) [GT tr.112]"
+  },
+  {
+    "q": "Hồ Chí Minh đưa ra quan niệm về văn hóa (\"Vì lẽ sinh tồn cũng như mục đích của cuộc sống...\") vào thời gian nào?",
+    "options": [
+      "8/1943",
+      "9/1945",
+      "11/1946",
+      "6/1949"
+    ],
+    "a": 0,
+    "quote": "Quan niệm văn hóa tháng 8/1943 [GT tr.113; TT t.3, tr.458]"
+  },
+  {
+    "q": "Trong kháng chiến, nền văn hóa mới được xây dựng theo 3 tính chất nào?",
+    "options": [
+      "Dân tộc, khoa học, đại chúng",
+      "Hiện đại, hội nhập, sáng tạo",
+      "Truyền thống, cách mạng, quốc tế",
+      "Nhân văn, dân chủ, pháp quyền"
+    ],
+    "a": 0,
+    "quote": "Nền văn hóa mới: dân tộc, khoa học, đại chúng [GT tr.117–118]"
+  },
+  {
+    "q": "\"Văn hóa là một mặt trận, anh chị em văn nghệ sĩ là ... trên mặt trận ấy\". Điền từ còn thiếu:",
+    "options": [
+      "người lính",
+      "chiến sĩ",
+      "người thợ",
+      "người thầy"
+    ],
+    "a": 1,
+    "quote": "\"Anh chị em văn nghệ sĩ là chiến sĩ trên mặt trận ấy\" [GT tr.116–117]"
+  },
+  {
+    "q": "Bác giáo dục học sinh, sinh viên toàn diện \"Đức, Trí, Thể, Mỹ\". Yếu tố nào là GỐC?",
+    "options": [
+      "Trí",
+      "Thể",
+      "Mỹ",
+      "Đức"
+    ],
+    "a": 3,
+    "quote": "\"Nếu không có đạo đức cách mạng thì có tài cũng vô dụng\" [GT tr.120]"
+  },
+  {
+    "q": "Theo Bác, học để làm gì?",
+    "options": [
+      "Để lấy bằng cấp",
+      "Để làm việc, làm người, làm cán bộ",
+      "Để làm quan",
+      "Để đi nước ngoài"
+    ],
+    "a": 1,
+    "quote": "\"Học để làm việc, làm người, làm cán bộ\" [GT tr.120]"
+  },
+  {
+    "q": "Phẩm chất đạo đức BAO TRÙM NHẤT trong 4 chuẩn mực là:",
+    "options": [
+      "Cần, kiệm, liêm, chính",
+      "Trung với nước, hiếu với dân",
+      "Thương yêu con người",
+      "Tinh thần quốc tế trong sáng"
+    ],
+    "a": 1,
+    "quote": "Trung với nước, hiếu với dân là phẩm chất bao trùm nhất [GT tr.120–121]"
+  },
+  {
+    "q": "Bác ví 4 đức Cần, Kiệm, Liêm, Chính như gì?",
+    "options": [
+      "Bốn mùa của trời, bốn phương của đất",
+      "Bốn bánh của xe",
+      "Bốn mặt của khối vuông",
+      "Bốn cột của ngôi nhà"
+    ],
+    "a": 0,
+    "quote": "\"Thiếu một đức, thì không thành người\" [GT tr.123]"
+  },
+  {
+    "q": "Theo Bác, muốn LIÊM được thì trước hết phải:",
+    "options": [
+      "Cần",
+      "Kiệm",
+      "Chính",
+      "Chí công vô tư"
+    ],
+    "a": 1,
+    "quote": "\"Có Kiệm mới Liêm được\" [GT tr.122]"
+  },
+  {
+    "q": "Trong tư tưởng Hồ Chí Minh, mục tiêu giải phóng cuối cùng (cao nhất) là:",
+    "options": [
+      "Giải phóng dân tộc",
+      "Giải phóng xã hội",
+      "Giải phóng giai cấp",
+      "Giải phóng con người"
+    ],
+    "a": 3,
+    "quote": "Dân tộc → xã hội → giai cấp → con người [GT tr.130–131]"
   }
 ]

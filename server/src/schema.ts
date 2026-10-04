@@ -1,4 +1,4 @@
-import { Schema, MapSchema, type } from '@colyseus/schema';
+import { Schema, MapSchema, ArraySchema, type } from '@colyseus/schema';
 
 // ⚠️ Cần "useDefineForClassFields": false + "experimentalDecorators": true trong tsconfig,
 // nếu không @type sẽ không bắt được field -> client nhận state rỗng.
@@ -8,6 +8,7 @@ export class Player extends Schema {
   @type('float32') x = 0;
   @type('float32') z = 0;
   @type('float32') rot = 0;
+  @type('float32') prog = 0;     // quãng đường đã đi dọc đường chữ S (m) -> xếp hạng / thanh tiến độ
   @type('float32') stamina = 0;
   @type('uint8') zone = 0;       // khu đang đứng, 0 = ngoài khu
   @type('uint8') cpZone = 0;     // checkpoint = khu đã vào xa nhất, 0 = vạch xuất phát
@@ -19,6 +20,14 @@ export class Player extends Schema {
   @type('boolean') online = true;
 }
 
+// Cạm bẫy theo toạ độ đường: bom dùng (s, d0); hàng rào chắn ngang từ d0 tới d1 tại quãng s
+export class Trap extends Schema {
+  @type('string') kind = 'bomb';   // 'bomb' | 'fence'
+  @type('float32') s = 0;
+  @type('float32') d0 = 0;
+  @type('float32') d1 = 0;
+}
+
 // Câu hỏi KHÔNG nằm trong state: mỗi người có câu riêng, gửi bằng message riêng (chống nhìn bài + giấu đáp án)
 export class GameState extends Schema {
   @type('string') code = '';
@@ -27,4 +36,5 @@ export class GameState extends Schema {
   @type('uint8') total = 0;        // tổng số câu
   @type('float64') phaseEnd = 0;   // mốc server-time (ms) kết thúc ván
   @type({ map: Player }) players = new MapSchema<Player>();
+  @type([Trap]) traps = new ArraySchema<Trap>();
 }

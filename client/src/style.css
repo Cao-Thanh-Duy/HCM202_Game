@@ -305,3 +305,15 @@ table.rank .sw { display: inline-block; width: 14px; height: 14px; border-radius
 .sndvol::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--card); border: 2px solid var(--line); box-shadow: var(--hard-sm); }
 .sndvol::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: var(--card); border: 2px solid var(--line); }
 .timebar div.warn { background: var(--son); }
+
+/* Tracker: 3 khu + cạm bẫy */
+.trk-zones { display: flex; gap: 5px; }
+.zc { flex: 1; text-align: center; padding: 3px 0; border-radius: 8px; border: 2px solid var(--line); color: var(--ink); text-shadow: none; font: 800 .74rem var(--display); }
+.zc b { font-size: .82rem; }
+.zc.z1 { background: #e8b83a; } .zc.z2 { background: #e0675a; } .zc.z3 { background: #c98a52; }
+.trk-line.dim { font-weight: 600; opacity: .8; font-size: .74rem; }
+.trk-traps { display: grid; gap: 4px; }
+.trk-traps div { display: flex; align-items: center; gap: 8px; }
+.trk-traps i { width: 24px; height: 24px; flex: 0 0 auto; display: grid; place-items: center; font-style: normal; border-radius: 6px; background: rgba(226, 87, 76, .35); border: 1px solid rgba(255, 248, 236, .3); }
+.trk-traps b { color: #ffb4a8; }
+.trk-traps small { display: block; font-size: .68rem; opacity: .7; font-weight: 600; }
