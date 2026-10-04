@@ -69,7 +69,7 @@ q,A,B,C,D,answer,quote
 - Đuốc sáng/tắt liên tục suốt ván. Đi khi đuốc tắt → **về khu (checkpoint) gần nhất đã vào**, chưa vào khu nào → **về vạch xuất phát**.
 - **Map chữ S dài 200m** (`shared/path.ts`): đi tự do WASD trong lòng đường, camera xoay theo khúc cua, W luôn là "tiến theo đường".
 - Khu 1/2/3: đứng trong khu khi trả lời đúng được **+5 / +7 / +10 stamina**, đi nhanh hơn **10%**, và **lưu checkpoint**.
-- **Cạm bẫy** (server random mỗi phòng): 💣 bom → về checkpoint (chưa có → vạch xuất phát); 🚧 hàng rào chắn nửa đường → mất 50% stamina (mỗi hàng rào phạt 1 lần, bị đưa về sau thì tính lại).
+- **Cạm bẫy** (server random mỗi phòng): 💣 bom → về checkpoint (chưa có → vạch xuất phát); 🚧 hàng rào gai chắn nửa đường → mất 50% stamina (mỗi hàng rào gai phạt 1 lần, bị đưa về sau thì tính lại).
 - Ngân hàng **30 câu**, phát xoay vòng không giới hạn.
 - **Âm thanh chỉ phát ở máy host**: nhạc nền `client/public/sound/lobby.mp3` (sảnh/kết quả) và `ingame.mp3` (trong ván), hiệu ứng tổng hợp WebAudio. Có nút 🔊 + 2 thanh kéo 🎵 nhạc / 💥 hiệu ứng ở sảnh và trong ván. ⏹ để kết thúc sớm.
 
@@ -79,8 +79,8 @@ Tất cả thông số nằm trong **`shared/config.ts`**:
 |---|---|---|
 | `MAP_LENGTH` | 200 | Độ dài đường chữ S (m) |
 | `ROAD_HALF_WIDTH` | 8 | Nửa bề rộng đường (m) |
-| `BOMBS / FENCES` | 10 / 7 | Số bom / hàng rào mỗi phòng |
-| `FENCE_STAMINA_MUL` | 0.5 | Đâm hàng rào còn 50% stamina |
+| `BOMBS / FENCES` | 10 / 7 | Số bom / hàng rào gai mỗi phòng |
+| `FENCE_STAMINA_MUL` | 0.5 | Vướng rào gai còn 50% stamina |
 | `BASE_SPEED` | 2 | m/s. Chậm có chủ đích để stamina vắt qua lúc đuốc tắt |
 | `STAMINA_MAX_Q / MIN_Q` | 10 / 5 | Stamina khi đúng (nhanh → chậm) |
 | `QUESTION_MS` | 20s | Thời gian mỗi câu; hết giờ panel tự đóng, mở lại (Q) ra câu khác |

@@ -29,7 +29,7 @@ const RULES = [
   `<b>🔥 Sáng</b>: đi · <b>⚠️ Tối dần</b> (1s): chuẩn bị dừng · <b>⛔ Tắt</b>: đứng yên`,
   `<b>✨ Đứng trong khu</b> khi trả lời đúng: ${ZONES.map(z => `<b>${z.name} +${z.bonus}⚡</b>`).join(' · ')} mỗi câu · <b>+${CFG.ZONE_SPEED_BONUS * 100}%</b> tốc độ · <b>lưu checkpoint</b>`,
   `<b>💀 Đi khi đuốc tắt</b> hoặc <b>💣 dính bom</b> → về khu gần nhất đã vào; chưa vào khu nào → <b>về vạch xuất phát</b>`,
-  `<b>🚧 Đâm hàng rào</b> → mất <b>${(1 - CFG.FENCE_STAMINA_MUL) * 100}%</b> stamina (hàng rào chỉ chắn nửa đường, đi vòng được)`,
+  `<b>🚧 Vướng hàng rào gai</b> → mất <b>${(1 - CFG.FENCE_STAMINA_MUL) * 100}%</b> stamina (rào gai chỉ chắn nửa đường, đi vòng được)`,
 ].map(r => `<div>${r}</div>`).join('');
 document.querySelectorAll('[data-rules]').forEach(el => (el.innerHTML = RULES));
 
@@ -116,7 +116,7 @@ function enter(host: boolean) {
   });
   r.onMessage('fence', ({ id, i, lost }) => {
     fenceFx(i);
-    if (id === r.sessionId) popup('caught', '🚧 ĐÂM HÀNG RÀO!', `Mất ${lost} ⚡ (còn 50%)`, 2000);
+    if (id === r.sessionId) popup('caught', '🚧 VƯỚNG RÀO GAI!', `Mất ${lost} ⚡ (còn 50%)`, 2000);
     if (isHost) sfx.fence();
   });
   r.onMessage('checkpoint', ({ id, zone }) => {
@@ -258,6 +258,7 @@ function renderHud(s: any) {
   banner.className = 'banner ' + s.torch;
   banner.textContent = BANNER[s.torch as keyof typeof BANNER] ?? '';
   $('torchDot').className = 'tdot ' + s.torch;
+  $('torchIcon').className = 'torchIcon ' + s.torch;
   document.querySelectorAll('#guideTop .lights i').forEach(i => i.classList.toggle('active', i.classList.contains(s.torch)));
 
   const me = s.players.get(room!.sessionId);

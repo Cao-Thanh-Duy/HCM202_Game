@@ -97,7 +97,7 @@ scene.add(ground, road, edgeL, edgeR);
 // Vạch xuất phát
 const startLine = new THREE.Mesh(ribbon(0, 0.8, -HW, HW, 0.03), new THREE.MeshBasicMaterial({ color: PAL.gold, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
 const st = toWorld(0, -HW - 2);
-const startLbl = textSprite('XUẤT PHÁT', '#f6c445', 40); startLbl.position.set(st.x, 3, st.z); startLbl.scale.multiplyScalar(2.2);
+const startLbl = textSprite('XUẤT PHÁT', '#f6c445', 40); startLbl.position.set(st.x, 3, st.z); startLbl.scale.multiplyScalar(1.4);
 scene.add(startLine, startLbl);
 
 // 3 khu: thảm màu cong theo đường + biển "Khu N" + cờ CHECKPOINT
@@ -203,13 +203,14 @@ const finishLine = new THREE.Mesh(ribbon(L - 0.8, L, -HW, HW, 0.03), new THREE.M
 scene.add(gate, finishLine);
 
 // ---------- CẠM BẪY (vị trí do server random, gửi qua state.traps) ----------
-// 💣 Bom: quả cầu đen + ngòi + đèn đỏ nhấp nháy. 🚧 Hàng rào: cọc + 2 thanh sọc đỏ trắng chắn nửa đường.
+// 💣 Bom: quả cầu đen + ngòi + đèn đỏ nhấp nháy. 🚧 Hàng rào gai: cọc gỗ + dây thép gai chắn nửa đường.
 const trapGroup = new THREE.Group(); scene.add(trapGroup);
 const bombMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.4, metalness: 0.3 });
 const bombLightMat = new THREE.MeshBasicMaterial({ color: 0xff2a1a });
 const bombs: { g: THREE.Group; x: number; z: number }[] = [];
-const fenceMatA = new THREE.MeshStandardMaterial({ color: 0xe2574c, emissive: 0x5a0d08 }), fenceMatB = new THREE.MeshStandardMaterial({ color: 0xfff2dc, emissive: 0x3a3020 });
 const postMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1e });
+const wireMat = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 0.8, roughness: 0.35, emissive: 0x2a2f36 }); // thép sáng nhẹ để thấy được ban đêm
+const barbGeo = new THREE.BoxGeometry(0.03, 0.03, 0.32);
 let trapsBuilt = 0;
 export function buildTraps(list: { kind: string; s: number; d0: number; d1: number }[]) {
   if (list.length === trapsBuilt) return; // chỉ dựng 1 lần khi nhận đủ danh sách
@@ -225,19 +226,29 @@ export function buildTraps(list: { kind: string; s: number; d0: number; d1: numb
       g.add(ball, fuse, spark, warn); g.position.set(p.x, 0, p.z);
       trapGroup.add(g); bombs.push({ g, x: p.x, z: p.z });
     } else {
+      // Hàng rào GAI: cọc gỗ + 3 sợi dây thép có gai (gai dùng InstancedMesh -> 1 draw call / hàng rào)
       const g = new THREE.Group(), pt = pointAt(t.s), yaw = yawOf(pt.tx, pt.tz);
-      const w = t.d1 - t.d0, mid = toWorld(t.s, (t.d0 + t.d1) / 2);
-      for (let k = 0; k <= Math.ceil(w / 2); k++) { // cọc mỗi ~2m
-        const c = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.6, 0.3), postMat);
-        c.position.set(-w / 2 + (w * k) / Math.ceil(w / 2), 0.8, 0); g.add(c);
+      const w = t.d1 - t.d0, mid = toWorld(t.s, (t.d0 + t.d1) / 2), nPost = Math.ceil(w / 2);
+      for (let k = 0; k <= nPost; k++) {
+        const c = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 1.7, 6), postMat);
+        c.position.set(-w / 2 + (w * k) / nPost, 0.85, 0); c.rotation.z = (k % 2 ? 1 : -1) * 0.06; g.add(c); // cọc hơi xiêu cho tự nhiên
       }
-      [0.6, 1.2].forEach((y, j) => {
-        const n = Math.ceil(w / 1.2);
-        for (let k = 0; k < n; k++) { // thanh sọc đỏ/trắng xen kẽ
-          const b = new THREE.Mesh(new THREE.BoxGeometry(w / n, 0.28, 0.15), (k + j) % 2 ? fenceMatA : fenceMatB);
-          b.position.set(-w / 2 + (w / n) * (k + 0.5), y, 0); g.add(b);
+      const heights = [0.45, 0.9, 1.35], barbStep = 0.45, perWire = Math.floor(w / barbStep);
+      const barbs = new THREE.InstancedMesh(barbGeo, wireMat, heights.length * perWire * 2);
+      let bi = 0;
+      heights.forEach(y => {
+        const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, w, 4), wireMat);
+        wire.rotation.z = Math.PI / 2; wire.position.y = y; g.add(wire);
+        for (let k = 0; k < perWire; k++) { // mỗi gai = 2 que chéo hình chữ X
+          const x = -w / 2 + barbStep * (k + 0.5);
+          for (const a of [Math.PI / 4, -Math.PI / 4]) barbs.setMatrixAt(bi++, m4.compose(new THREE.Vector3(x, y, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(a, 0, a)), new THREE.Vector3(1, 1, 1)));
         }
       });
+      g.add(barbs);
+      // Vệt đỏ dưới đất -> đêm tối vẫn thấy chỗ có rào gai
+      const warn = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.4), new THREE.MeshBasicMaterial({ color: 0xff3b2a, transparent: true, opacity: 0.35, depthWrite: false }));
+      warn.rotation.x = -Math.PI / 2; warn.position.y = 0.04; g.add(warn);
+      const sign = textSprite('⚠ RÀO GAI', '#e2574c', 30, '#fff8ec'); sign.position.set(0, 2.2, 0); sign.scale.multiplyScalar(0.8); g.add(sign);
       g.position.set(mid.x, 0, mid.z); g.rotation.y = yaw; // trục X cục bộ = ngang đường
       trapGroup.add(g);
     }

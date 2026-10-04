@@ -317,3 +317,27 @@ table.rank .sw { display: inline-block; width: 14px; height: 14px; border-radius
 .trk-traps i { width: 24px; height: 24px; flex: 0 0 auto; display: grid; place-items: center; font-style: normal; border-radius: 6px; background: rgba(226, 87, 76, .35); border: 1px solid rgba(255, 248, 236, .3); }
 .trk-traps b { color: #ffb4a8; }
 .trk-traps small { display: block; font-size: .68rem; opacity: .7; font-weight: 600; }
+
+/* ---------- Icon đuốc lớn trên HUD (đổi theo trạng thái on / dim / off) ---------- */
+.torchIcon { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); width: 84px; height: 130px; pointer-events: none; }
+.torchIcon svg { width: 100%; height: 100%; overflow: visible; }
+.torchIcon .bowl { fill: var(--nghe); stroke: var(--line); stroke-width: 2.5; stroke-linejoin: round; }
+.torchIcon .stick { fill: #8a5a2e; stroke: var(--line); stroke-width: 2.5; stroke-linejoin: round; }
+.torchIcon .outer { fill: #ff8a2a; stroke: var(--line); stroke-width: 2.5; stroke-linejoin: round; transition: fill .3s; }
+.torchIcon .inner { fill: #ffe08a; transition: fill .3s; }
+.torchIcon .flame { transform-origin: 32px 53px; transform-box: view-box; transition: transform .3s, opacity .3s; }
+.torchIcon .smoke { fill: none; stroke: rgba(220, 225, 235, .8); stroke-width: 3; stroke-linecap: round; opacity: 0; }
+/* Sáng: lửa to, lắc nhẹ, quầng sáng cam */
+.torchIcon.on svg { filter: drop-shadow(0 0 14px rgba(255, 140, 40, .9)) drop-shadow(0 0 30px rgba(255, 120, 20, .5)); }
+.torchIcon.on .flame { animation: flicker .35s ease-in-out infinite alternate; }
+@keyframes flicker { from { transform: scale(1, 1) skewX(-3deg); } to { transform: scale(1.06, 1.12) skewX(3deg); } }
+/* Sắp tắt: lửa co lại, chập chờn nhanh, ngả xanh */
+.torchIcon.dim svg { filter: drop-shadow(0 0 8px rgba(255, 110, 60, .7)); }
+.torchIcon.dim .outer { fill: #e96a4a; } .torchIcon.dim .inner { fill: #9db4ea; }
+.torchIcon.dim .flame { animation: dying .12s steps(2) infinite; transform: scale(.6); }
+@keyframes dying { 0% { transform: scale(.7, .65); opacity: 1; } 100% { transform: scale(.45, .4); opacity: .55; } }
+/* Tắt: mất lửa, bốc khói, đuốc xám */
+.torchIcon.off .flame { transform: scale(0); opacity: 0; }
+.torchIcon.off .smoke { opacity: 1; animation: smoke 1.6s ease-out infinite; }
+.torchIcon.off .bowl, .torchIcon.off .stick { filter: grayscale(.8) brightness(.7); }
+@keyframes smoke { from { transform: translateY(6px); opacity: .9; } to { transform: translateY(-14px); opacity: 0; } }
