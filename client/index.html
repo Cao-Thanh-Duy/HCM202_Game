@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đuốc Soi Đường · HCM202 Nhóm 9</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='1.5' y='1.5' width='29' height='29' rx='9' fill='%23f6c445' stroke='%232a1a12' stroke-width='2.5'/><path d='M16 6c4 5 6 8 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 1 2 2 3 3 3 0-3-1-5 0-8z' fill='%23e2574c' stroke='%232a1a12' stroke-width='2'/></svg>" />
+</head>
+<body>
+  <!-- MENU -->
+  <section id="menu" class="screen center doodle">
+    <div class="card menuCard pop">
+      <span class="tape"></span>
+      <div class="logo big">🔥</div>
+      <p class="eyebrow">HCM202 · Nhóm 9 · Chương 6</p>
+      <h1>Đuốc Soi Đường</h1>
+      <p class="note">"Văn hóa soi đường cho quốc dân đi"</p>
+      <hr class="rule" />
+      <input id="name" maxlength="16" placeholder="Tên nhóm / tên bạn" />
+      <input id="code" maxlength="4" inputmode="numeric" placeholder="Mã phòng (4 số)" />
+      <button id="btnJoin" class="btn btn-primary">Vào phòng →</button>
+      <div class="divider">hoặc</div>
+      <button id="btnHost" class="btn btn-ghost">📽 Tạo phòng (máy chiếu)</button>
+      <p id="menuErr" class="err"></p>
+    </div>
+  </section>
+
+  <!-- LOBBY -->
+  <section id="lobby" class="screen center doodle hidden">
+    <!-- Host: tổng quan + QR -->
+    <div class="lobbyHost hostOnly">
+      <div class="card qrCol pop">
+        <span class="tape"></span>
+        <p class="eyebrow">Quét để vào chơi</p>
+        <div class="qrwrap"><img id="qr" alt="QR vào phòng" /></div>
+        <p class="eyebrow">hoặc nhập mã</p>
+        <div id="lobbyCode" class="bigcode">----</div>
+        <p class="url"><span id="lobbyUrl"></span></p>
+      </div>
+      <div class="card col pop" style="animation-delay:.08s">
+        <div class="row">
+          <div class="logo">🔥</div>
+          <div class="grow"><p class="eyebrow">HCM202 · Nhóm 9</p><h1 class="title">Đuốc Soi Đường</h1></div>
+          <span class="codechip">Phòng <b id="lobbyCodeChip"></b></span>
+        </div>
+        <hr class="rule" />
+        <div class="rules stagger" data-rules></div>
+        <div class="row between"><h3>Người chơi <span class="count" id="lobbyCount">0</span></h3><span id="qInfo" class="hand"></span></div>
+        <ul id="lobbyList" class="chips"></ul>
+        <div class="row">
+          <label class="btn btn-ghost grow file">📄 Import câu hỏi (.json / .csv)<input id="qFile" type="file" accept=".json,.csv" /></label>
+          <button id="btnStart" class="btn btn-primary grow">▶ Bắt đầu</button>
+        </div>
+        <div class="row sndRow"><span class="hand">Âm thanh máy chiếu</span><div class="sndCtl"><button class="sndMute" title="Tắt/bật tiếng">🔊</button>
+          <label>🎵<input type="range" class="sndvol" data-kind="music" min="0" max="100" /></label>
+          <label>💥<input type="range" class="sndvol" data-kind="sfx" min="0" max="100" /></label></div></div>
+      </div>
+    </div>
+    <!-- Player: chờ -->
+    <div class="card wide playerOnly pop">
+      <span class="tape"></span>
+      <p class="eyebrow">Đã vào phòng <b id="lobbyCodeP"></b></p>
+      <h1>Chờ host bắt đầu…</h1>
+      <hr class="rule" />
+      <div class="rules stagger" data-rules></div>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <section id="hud" class="hidden">
+    <!-- HUD giữa trên: không nền, chữ viền tối -> không che ngọn đuốc ở đích -->
+    <div class="topbar">
+      <span id="torchDot" class="tdot on"></span>
+      <b id="hudTimer">10:00</b>
+      <span class="playerOnly stam">⚡<b id="hudStamina">0</b></span>
+    </div>
+    <div id="torchBanner" class="banner"></div>
+    <div class="progress playerOnly"><div id="hudProg"></div><span style="left:33.3%">1</span><span style="left:60%">2</span><span style="left:86.6%">3</span></div>
+    <div class="hostOnly boardCard"><p class="eyebrow">Bảng xếp hạng · tiến độ 🏁</p><ol id="board" class="board"></ol></div>
+    <div class="hostOnly hostCtl">
+      <button id="btnCam" class="btn btn-sm">🎯 Bám người chơi</button>
+      <div class="sndCtl"><button class="sndMute" title="Tắt/bật tiếng">🔊</button>
+          <label>🎵<input type="range" class="sndvol" data-kind="music" min="0" max="100" /></label>
+          <label>💥<input type="range" class="sndvol" data-kind="sfx" min="0" max="100" /></label></div>
+      <button id="btnEnd" class="btn btn-sm btn-end">⏹ Kết thúc</button>
+    </div>
+    <p class="hostOnly camHint">🖱 Cuộn: zoom · Kéo: di chuyển · Nhấp đúp: về mặc định</p>
+    <!-- Hướng dẫn kiểu FPS: phím + icon, không đọc đoạn văn -->
+    <aside id="guide" class="playerOnly guide">
+      <div class="keys">
+        <div class="k"><span class="wasd"><kbd class="w">W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><em>Di chuyển</em></div>
+        <div class="k"><span><kbd>1</kbd>–<kbd>4</kbd></span><em>Trả lời</em></div>
+        <div class="k"><span><kbd>Q</kbd></span><em>Câu hỏi</em></div>
+        <div class="k"><span><kbd>H</kbd></span><em>Ẩn HUD</em></div>
+      </div>
+    </aside>
+    <!-- Thông tin luật + checkpoint: góc trên trái -->
+    <aside id="guideTop" class="playerOnly tracker">
+      <div class="trk-head"><span>Mục tiêu</span><small>H · ẩn</small></div>
+      <div class="trk-goal">🏁 Về đích trước khi hết giờ</div>
+      <!-- Tiến trình checkpoint: vạch xuất phát + 3 khu -->
+      <div class="cpTrack">
+        <i class="node on">⛳</i><b class="seg" data-z="1"></b><i class="node" data-z="1">1</i><b class="seg" data-z="2"></b><i class="node" data-z="2">2</i><b class="seg" data-z="3"></b><i class="node" data-z="3">3</i>
+      </div>
+      <div class="cpLabel">Hồi sinh tại: <b id="hudCp">Vạch xuất phát</b></div>
+      <div id="hudZone" class="zoneNow"></div>
+      <div class="trk-rules">
+        <div class="lights"><i class="on">🔥 Đi</i><i class="dim">⚠ Chuẩn bị</i><i class="off">⛔ Dừng</i></div>
+        <div class="trk-line"><span class="tag">✨ Khu</span> +5⚡/câu · +10% tốc độ · lưu checkpoint</div>
+        <div class="trk-line bad">💀 Đi khi đuốc tắt → về checkpoint</div>
+      </div>
+    </aside>
+    <!-- Popup giữa màn khi vào khu (kiểu "objective" FPS) -->
+    <div id="zonePop" class="zonePop"></div>
+  </section>
+
+  <!-- QUIZ: panel bên phải, người chơi tự trả lời liên tục -->
+  <aside id="quiz" class="quiz hidden">
+    <span class="tape"></span>
+    <header>
+      <span id="qNum" class="pill">Câu 1/20</span>
+      <button id="qToggle" class="btn btn-sm btn-ghost" title="Phím Q">Thu gọn (Q)</button>
+    </header>
+    <div id="qBody">
+      <div class="speed"><small>⏱ Còn <b id="qLeft">20</b>s · trả lời càng nhanh càng nhiều ⚡</small><div class="timebar"><div id="qBar"></div></div></div>
+      <h2 id="qText"></h2>
+      <div id="qOpts" class="options"></div>
+      <div id="qQuoteBox" class="lesson hidden"><span class="lh">📜 Trích dẫn</span><p id="qQuote"></p></div>
+      <p id="qGain" class="gain"></p>
+    </div>
+  </aside>
+  <button id="qOpen" class="btn qOpen hidden">❓ Câu hỏi (Q)</button>
+
+  <!-- END -->
+  <section id="end" class="screen center doodle hidden">
+    <div class="card wide pop">
+      <span class="tape"></span>
+      <p class="eyebrow">Ván đấu kết thúc</p>
+      <h1>Kết quả</h1>
+      <hr class="rule" />
+      <table class="rank"><thead><tr><th>#</th><th>Nhóm</th><th>Quãng đường</th><th>Đúng</th><th>Bị bắt</th></tr></thead><tbody id="endList"></tbody></table>
+      <div class="row">
+        <button id="btnStats" class="btn btn-primary grow hostOnly">⬇ Tải thống kê (JSON)</button>
+        <button id="btnLeave" class="btn btn-ghost grow">Về menu</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

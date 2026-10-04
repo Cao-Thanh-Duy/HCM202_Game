@@ -1,0 +1,222 @@
+[
+  {
+    "q": "Theo Hồ Chí Minh, văn hóa phải sửa đổi những thói xấu nào?",
+    "options": [
+      "Tham nhũng, lười biếng, phù hoa, xa xỉ",
+      "Bảo thủ, trì trệ, giáo điều",
+      "Quan liêu, mệnh lệnh, hình thức",
+      "Cá nhân, cục bộ, bè phái"
+    ],
+    "a": 0,
+    "quote": "\"Văn hóa phải sửa đổi tham nhũng, lười biếng, phù hoa, xa xỉ\" [GT tr.113]"
+  },
+  {
+    "q": "\"Văn hóa soi đường cho quốc dân đi\" gắn với phương diện động lực nào?",
+    "options": [
+      "Văn hóa văn nghệ",
+      "Văn hóa chính trị",
+      "Văn hóa pháp luật",
+      "Văn hóa giáo dục"
+    ],
+    "a": 1,
+    "quote": "Văn hóa chính trị là động lực \"soi đường cho quốc dân đi\" [GT tr.116]"
+  },
+  {
+    "q": "Hội nghị Văn hóa toàn quốc lần thứ nhất diễn ra ngày nào?",
+    "options": [
+      "19/8/1945",
+      "2/9/1945",
+      "24/11/1946",
+      "19/12/1946"
+    ],
+    "a": 2,
+    "quote": "24/11/1946, Nhà hát Lớn Hà Nội; nay là Ngày Văn hóa Việt Nam (NQ 80-NQ/TW, 2026)"
+  },
+  {
+    "q": "Trong tư tưởng Hồ Chí Minh, văn hóa có vai trò gì?",
+    "options": [
+      "Chỉ là mục tiêu",
+      "Chỉ là động lực",
+      "Vừa là mục tiêu, vừa là động lực",
+      "Phụ thuộc hoàn toàn kinh tế"
+    ],
+    "a": 2,
+    "quote": "Văn hóa vừa là mục tiêu, vừa là động lực của sự nghiệp cách mạng [GT tr.115–116]"
+  },
+  {
+    "q": "\"Cần tức là ...\" — Bác định nghĩa thế nào?",
+    "options": [
+      "Làm việc thật nhiều giờ",
+      "Siêng năng, chăm chỉ, cố gắng dẻo dai",
+      "Tiết kiệm thời gian",
+      "Không ham danh lợi"
+    ],
+    "a": 1,
+    "quote": "\"Cần tức là siêng năng, chăm chỉ, cố gắng dẻo dai\" [GT tr.122]"
+  },
+  {
+    "q": "Thức trắng đêm trước deadline để làm bài: theo Bác, thiếu điều gì của chữ Cần?",
+    "options": [
+      "Thiếu sức khỏe",
+      "Thiếu kế hoạch",
+      "Thiếu tiền",
+      "Không thiếu gì"
+    ],
+    "a": 1,
+    "quote": "\"Muốn cho chữ Cần có nhiều kết quả hơn, thì phải có kế hoạch cho mọi công việc\" [GT tr.122]"
+  },
+  {
+    "q": "Mua khóa học chuyên ngành để nâng cao năng lực là:",
+    "options": [
+      "Hoang phí",
+      "Bủn xỉn",
+      "Kiệm đúng, vì đó là việc đáng tiêu",
+      "Phù hoa"
+    ],
+    "a": 2,
+    "quote": "\"Tiết kiệm không phải là bủn xỉn… Việc đáng tiêu mà không tiêu, là bủn xỉn\" [GT tr.122]"
+  },
+  {
+    "q": "Bác ví Cần và Kiệm như thế nào?",
+    "options": [
+      "Hai bánh xe",
+      "Hai chân của con người",
+      "Hai cánh chim",
+      "Hai mặt đồng xu"
+    ],
+    "a": 1,
+    "quote": "\"Cần với kiệm, phải đi đôi với nhau, như hai chân của con người\" [GT tr.122]"
+  },
+  {
+    "q": "Chuẩn mực nào là \"nội dung cốt lõi\" của đạo đức cách mạng?",
+    "options": [
+      "Trung với nước, hiếu với dân",
+      "Tinh thần quốc tế trong sáng",
+      "Cần, kiệm, liêm, chính, chí công vô tư",
+      "Thương yêu con người"
+    ],
+    "a": 2,
+    "quote": "Cần, kiệm, liêm, chính, chí công vô tư là nội dung cốt lõi của đạo đức cách mạng [GT tr.121]"
+  },
+  {
+    "q": "Nhờ AI viết hết báo cáo để tiết kiệm công sức là:",
+    "options": [
+      "Kiệm đúng chỗ",
+      "Kiệm sai chỗ, trái chữ Cần và chữ Liêm",
+      "Cần cù",
+      "Sáng tạo"
+    ],
+    "a": 1,
+    "quote": "Cần là \"tự lực cánh sinh, không lười biếng\" [GT tr.122]; Liêm: \"chỉ có một thứ ham là ham học\" [GT tr.122]"
+  },
+  {
+    "q": "Nguyên tắc nào KHÔNG thuộc 3 nguyên tắc xây dựng đạo đức cách mạng?",
+    "options": [
+      "Nói đi đôi với làm, nêu gương",
+      "Xây đi đôi với chống",
+      "Tu dưỡng đạo đức suốt đời",
+      "Lấy kinh tế làm gốc"
+    ],
+    "a": 3,
+    "quote": "3 nguyên tắc: nêu gương · xây đi đôi với chống · tu dưỡng suốt đời [GT tr.125–129]"
+  },
+  {
+    "q": "\"Ngọc càng mài càng sáng, vàng càng luyện càng trong\" minh họa nguyên tắc nào?",
+    "options": [
+      "Nêu gương",
+      "Xây đi đôi với chống",
+      "Tu dưỡng đạo đức suốt đời",
+      "Chí công vô tư"
+    ],
+    "a": 2,
+    "quote": "\"Đạo đức cách mạng không phải trên trời sa xuống…\" [GT tr.129]"
+  },
+  {
+    "q": "Theo Hồ Chí Minh, con người có vai trò gì?",
+    "options": [
+      "Vừa là mục tiêu, vừa là động lực",
+      "Chỉ là công cụ",
+      "Chỉ là mục tiêu",
+      "Chỉ là động lực"
+    ],
+    "a": 0,
+    "quote": "Con người là \"vốn quý nhất, động lực, nhân tố quyết định thành công\" [GT tr.130–131]"
+  },
+  {
+    "q": "Chương 4: Hồ Chí Minh gọi tham ô, lãng phí, quan liêu là gì?",
+    "options": [
+      "Bệnh cá nhân",
+      "\"Giặc nội xâm\"",
+      "Thói quen xấu",
+      "Tàn dư phong kiến"
+    ],
+    "a": 1,
+    "quote": "Lãng phí sức lao động, thời giờ, tiền của là \"giặc nội xâm\" [GT tr.88]"
+  },
+  {
+    "q": "Với sinh viên, thứ cần KIỆM nhất theo tinh thần của Bác là:",
+    "options": [
+      "Tiền ăn sáng",
+      "Thời giờ",
+      "Điện thoại",
+      "Quần áo"
+    ],
+    "a": 1,
+    "quote": "Kiệm là tiết kiệm \"sức lao động, thì giờ, tiền của\" [GT tr.122]; lãng phí thời giờ [GT tr.88]"
+  },
+  {
+    "q": "\"Một tấm gương sống còn có giá trị hơn ... bài diễn văn tuyên truyền\". Điền số còn thiếu:",
+    "options": [
+      "Mười",
+      "Một trăm",
+      "Một nghìn",
+      "Vạn"
+    ],
+    "a": 1,
+    "quote": "\"Một tấm gương sống còn có giá trị hơn một trăm bài diễn văn tuyên truyền\" [GT tr.126]"
+  },
+  {
+    "q": "Theo Hồ Chí Minh, những vấn đề nào cần được coi trọng ngang nhau?",
+    "options": [
+      "Chính trị, quân sự, ngoại giao, kinh tế",
+      "Chính trị, kinh tế, văn hóa, xã hội",
+      "Kinh tế, giáo dục, y tế, văn hóa",
+      "Văn hóa, đạo đức, pháp luật, giáo dục"
+    ],
+    "a": 1,
+    "quote": "Chính trị, kinh tế, văn hóa, xã hội là bốn vấn đề quan trọng ngang nhau [GT tr.113]"
+  },
+  {
+    "q": "\"Vì lợi ích mười năm thì phải trồng cây, vì lợi ích trăm năm thì phải ...\"",
+    "options": [
+      "Trồng rừng",
+      "Trồng người",
+      "Xây trường",
+      "Giữ đất"
+    ],
+    "a": 1,
+    "quote": "\"Vì lợi ích trăm năm thì phải trồng người\" — sự nghiệp của văn hóa giáo dục [GT tr.131]"
+  },
+  {
+    "q": "Tác phẩm \"Cần, Kiệm, Liêm, Chính\" (6/1949) được Bác ký bút danh gì?",
+    "options": [
+      "Trần Dân Tiên",
+      "T. Lan",
+      "Lê Quyết Thắng",
+      "Tân Sinh"
+    ],
+    "a": 2,
+    "quote": "Bút danh Lê Quyết Thắng, đăng báo Cứu quốc (TTXVN/VietnamPlus, 2024)"
+  },
+  {
+    "q": "Theo Bác, \"Chính\" nghĩa là gì?",
+    "options": [
+      "Làm theo cấp trên",
+      "Không tà, thẳng thắn, đứng đắn",
+      "Giữ đúng giờ giấc",
+      "Không tiêu xài"
+    ],
+    "a": 1,
+    "quote": "\"Chính nghĩa là không tà, nghĩa là thẳng thắn, đứng đắn\" [GT tr.122–123]"
+  }
+]

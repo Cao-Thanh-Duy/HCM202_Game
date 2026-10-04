@@ -1,0 +1,13 @@
+{
+  "name": "hcm202-duoc-soi-duong",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "setup": "npm i --prefix server && npm i --prefix client",
+    "dev": "concurrently -n server,client -c yellow,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm ci --include=dev --prefix server && npm ci --include=dev --prefix client && npm run build --prefix client",
+    "start": "npm start --prefix server",
+    "bots": "npm run bots --prefix server --"
+  },
+  "devDependencies": { "concurrently": "^9.1.0" }
+}
