@@ -164,7 +164,7 @@ function onPhase(s: any, prev: string) {
 }
 
 // ================= QUIZ (tự trả lời liên tục) =================
-let curQ: { n: number; total: number; q: string; options: string[] } | null = null;
+let curQ: { n: number; q: string; options: string[] } | null = null;
 let qEnds = 0, qLocked = true, quizOpen = true, outOfQ = false;
 let suppressAuto = false; // vừa hết giờ tự đóng -> không tự bật lại khi hết stamina, đợi người chơi mở
 
@@ -193,7 +193,7 @@ function onQuestion(q: (typeof curQ & { endsAt: number }) | null) {
     $('qText').textContent = '🎉 Bạn đã trả lời hết! Dùng stamina còn lại để về đích.';
     return;
   }
-  $('qNum').textContent = `Câu ${q.n}/${q.total}`;
+  $('qNum').textContent = `Câu ${q.n}`;
   $('qText').textContent = q.q;
   q.options.forEach((o, i) => {
     const b = document.createElement('button');
@@ -269,7 +269,7 @@ function renderHud(s: any) {
     boardAt = performance.now();
     const list = ranking(s);
     $('board').innerHTML = list.slice(0, 10).map(p =>
-      `<li style="--c:${hex(p.color)}"><b>${esc(p.name)}</b><small>${p.rank ? '🏁 về đích' : p.x.toFixed(0) + 'm'} · ${p.qDone}/${s.total} câu</small>`
+      `<li style="--c:${hex(p.color)}"><b>${esc(p.name)}</b><small>${p.rank ? '🏁 về đích' : p.x.toFixed(0) + 'm'} · ${p.qDone} câu</small>`
       + `<div class="lb"><i style="width:${Math.min(100, (p.x / CFG.MAP_LENGTH) * 100)}%"></i><u style="left:33.3%"></u><u style="left:60%"></u><u style="left:86.6%"></u></div></li>`).join('');
     if (s.phase === 'lobby') {
       $('lobbyCount').textContent = String(list.length);

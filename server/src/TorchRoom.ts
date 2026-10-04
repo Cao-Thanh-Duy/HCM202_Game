@@ -12,8 +12,9 @@ const shuffle = (n: number) => {
 };
 
 // Trạng thái riêng từng người (không đồng bộ xuống client)
-// pool = câu chưa trả lời; cur = câu đang hiện (-1 = không có); lastExpired = câu vừa hết giờ (tránh random trúng lại ngay)
-interface Priv { pool: number[]; cur: number; lastExpired: number; shownAt: number; locked: boolean; timer?: Delayed; qTimer?: Delayed }
+// bag = "túi" câu của vòng hiện tại (rút hết 20 câu theo thứ tự ngẫu nhiên rồi xáo lại -> KHÔNG giới hạn số câu, ít lặp)
+// cur = câu đang hiện (-1 = không có); last = câu vừa hiện (tránh vòng mới rút trúng ngay câu đó)
+interface Priv { bag: number[]; cur: number; last: number; shownAt: number; locked: boolean; timer?: Delayed; qTimer?: Delayed }
 
 export class TorchRoom extends Room<GameState> {
   maxClients = CFG.MAX_PLAYERS + 1; // +1 cho host
@@ -113,30 +114,37 @@ export class TorchRoom extends Room<GameState> {
   }
 
   // ---------------- QUESTIONS (riêng từng người) ----------------
-  newPriv(): Priv { return { pool: shuffle(this.questions.length), cur: -1, lastExpired: -1, shownAt: 0, locked: false }; }
+  newPriv(): Priv { return { bag: shuffle(this.questions.length), cur: -1, last: -1, shownAt: 0, locked: false }; }
+
+  // Rút 1 câu từ túi; túi rỗng thì xáo lại cả bộ (đảo nếu câu đầu trùng câu vừa hiện)
+  draw(pv: Priv) {
+    if (!pv.bag.length) {
+      pv.bag = shuffle(this.questions.length);
+      if (pv.bag.length > 1 && pv.bag[pv.bag.length - 1] === pv.last) pv.bag.unshift(pv.bag.pop()!);
+    }
+    return pv.bag.pop()!;
+  }
 
   sendQuestion(c: Client) {
     const p = this.state.players.get(c.sessionId), pv = this.priv.get(c.sessionId);
     if (!p || !pv) return;
-    if (!pv.pool.length) { c.send('q', null); return; } // hết câu
     // ⚠️ Đang có câu dở (F5/needQ) thì gửi lại ĐÚNG câu đó, KHÔNG reset giờ -> chống spam needQ để đổi câu / ăn thưởng nhanh
     if (pv.cur < 0) {
-      const choices = pv.pool.length > 1 ? pv.pool.filter(i => i !== pv.lastExpired) : pv.pool;
-      pv.cur = choices[Math.floor(Math.random() * choices.length)];
+      pv.cur = this.draw(pv); pv.last = pv.cur;
       pv.shownAt = Date.now();
       pv.qTimer?.clear();
       pv.qTimer = this.clock.setTimeout(() => this.expire(c), CFG.QUESTION_MS);
     }
     pv.locked = false;
     const Q = this.questions[pv.cur];
-    c.send('q', { n: p.qDone + 1, total: this.questions.length, q: Q.q, options: Q.options, endsAt: pv.shownAt + CFG.QUESTION_MS }); // KHÔNG gửi đáp án
+    c.send('q', { n: p.qDone + 1, q: Q.q, options: Q.options, endsAt: pv.shownAt + CFG.QUESTION_MS }); // KHÔNG gửi đáp án
   }
 
-  // Hết 20s không trả lời: câu quay lại pool, client tự đóng panel; mở lại sẽ random câu KHÁC
+  // Hết 20s không trả lời: câu bị lỡ nhét lại ĐÁY túi (sẽ gặp lại sau), client tự đóng panel; mở lại ra câu KHÁC
   expire(c: Client) {
     const pv = this.priv.get(c.sessionId);
     if (!pv || pv.cur < 0 || pv.locked) return;
-    pv.lastExpired = pv.cur; pv.cur = -1;
+    pv.bag.unshift(pv.cur); pv.cur = -1;
     c.send('qTimeout');
   }
 
@@ -157,7 +165,7 @@ export class TorchRoom extends Room<GameState> {
     }
     p.stamina += gain;
     p.qDone++;
-    pv.pool = pv.pool.filter(i => i !== qi); pv.cur = -1;
+    pv.cur = -1;
     this.stats[qi][choice]++;
     c.send('result', { choice, a: Q.a, quote: Q.quote ?? '', gain, zone: p.zone });
     // Server tự đẩy câu kế sau RESULT_MS -> client không skip được phần trích dẫn

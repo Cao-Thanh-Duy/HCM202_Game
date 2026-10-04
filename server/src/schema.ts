@@ -11,8 +11,8 @@ export class Player extends Schema {
   @type('float32') stamina = 0;
   @type('uint8') zone = 0;       // khu đang đứng, 0 = ngoài khu
   @type('uint8') cpZone = 0;     // checkpoint = khu đã vào xa nhất, 0 = vạch xuất phát
-  @type('uint8') qDone = 0;      // số câu đã trả lời
-  @type('uint8') qRight = 0;     // số câu đúng
+  @type('uint16') qDone = 0;     // số câu đã trả lời (không giới hạn -> uint16, uint8 tràn ở 255)
+  @type('uint16') qRight = 0;    // số câu đúng
   @type('boolean') stunned = false; // vừa phạm luật, khóa đến khi đuốc sáng lại
   @type('uint8') caught = 0;
   @type('uint8') rank = 0;       // thứ tự về đích, 0 = chưa về
