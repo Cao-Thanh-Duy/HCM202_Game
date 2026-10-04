@@ -339,7 +339,8 @@ function updateCamera(dt: number) {
     camPos.set(cx, d * 1.15, cz + d);
     camLook.set(cx, 0, cz - 4);
   }
-  const k = 1 - Math.exp(-dt * 4);
+  // Xa quá (vừa vào ván / F5 / bị bắt về checkpoint) -> nhảy thẳng tới, không bay lượn từ xa
+  const k = camera.position.distanceTo(camPos) > 40 ? 1 : 1 - Math.exp(-dt * 4);
   camera.position.lerp(camPos, k);
   camera.userData.look = (camera.userData.look ?? camLook.clone()).lerp(camLook, k);
   camera.lookAt(camera.userData.look);
@@ -357,7 +358,8 @@ const clock = new THREE.Clock();
 export function startLoop(onFrame: (dt: number) => void) {
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 0.1), t = clock.elapsedTime;
-    onFrame(dt);
+    // ⚠️ Lỗi trong callback mà không bắt thì three.js dừng hẳn requestAnimationFrame -> màn hình đứng hình vĩnh viễn
+    try { onFrame(dt); } catch (e) { console.error('[frame]', e); }
     // Nội suy tới vị trí server -> mượt dù server chỉ gửi 20Hz
     const k = 1 - Math.exp(-dt * 14);
     avatars.forEach(a => {

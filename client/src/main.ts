@@ -127,6 +127,7 @@ function enter(host: boolean) {
 
 let lastPhase = '', lastTorch = '', lastCount = -1;
 function onState(s: any) {
+  if (!s?.players) return; // state chưa giải mã xong (vừa join/reconnect)
   s.players.forEach((p: any, id: string) => {
     const a = upsertAvatar(id, p.name, p.color, id === room!.sessionId);
     if (id === room!.sessionId) reconcile(p); else a.target.set(p.x, 0, p.z);
@@ -332,7 +333,8 @@ function reconcile(p: any) {
 }
 
 startLoop(dt => {
-  const s = room?.state; if (!s || isHost) return;
+  // ⚠️ Mạng thật (Railway) có độ trễ: room có trước, state về sau -> s.players còn undefined. Thiếu guard này là vòng render chết hẳn.
+  const s = room?.state; if (!s?.players || isHost) return;
   setFollow(room!.sessionId); // ⚠️ đặt lại mỗi frame: sau reconnect/F5 camera luôn bám đúng nhân vật của mình
   const me = s.players.get(room!.sessionId); if (!me) return;
   const len = Math.hypot(input.x, input.z);
@@ -345,5 +347,5 @@ startLoop(dt => {
 });
 
 // ================= BOOT =================
-if (new URLSearchParams(location.search).has('debug')) (window as any).__room = () => room; // dùng cho test tự động
+if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { __room: () => room, __avatar: (id: string) => getAvatar(id) }); // dùng cho test tự động
 tryReconnect().then(role => { if (role) { if (role === 'host') { unlock(); resumeOnClick(); } enter(role === 'host'); } });
