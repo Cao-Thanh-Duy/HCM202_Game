@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CFG, ZONES, TEAM_COLORS, Torch } from '../../shared/config';
 import { PTS, pointAt, project, toWorld, BOUNDS } from '../../shared/path';
 
@@ -176,15 +177,45 @@ for (let i = 0; i < lanternN; i++) {
 }
 scene.add(lanterns, posts);
 
-// Cây rải ngoài lòng đường (bỏ chỗ quá gần đường)
+// Cây dừa low-poly: thân + tàu lá + trái gộp thành 1 geometry, màu theo đỉnh (vertexColors)
+// -> 1 InstancedMesh = 1 draw call cho cả rừng (~350 tam giác/cây, 220 cây ~ 77k tam giác: GPU nào cũng nhẹ).
+// ⚠️ mergeGeometries đòi mọi mảnh cùng kiểu: Box/Cylinder có index, Icosahedron thì không -> toNonIndexed() hết.
+function palmGeo() {
+  const parts: THREE.BufferGeometry[] = [];
+  const add = (g: THREE.BufferGeometry, color: number, m: THREE.Matrix4) => {
+    g = g.toNonIndexed(); g.applyMatrix4(m);
+    const c = new THREE.Color(color), n = g.attributes.position.count, arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) c.toArray(arr, i * 3);
+    g.setAttribute('color', new THREE.BufferAttribute(arr, 3)); parts.push(g);
+  };
+  const M = (x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) =>
+    new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'YXZ')), new THREE.Vector3(1, 1, 1));
+  // Thân 4 khúc, thon dần và nghiêng nhẹ -> dáng cong của cây dừa
+  let x = 0, y = 0;
+  for (let i = 0; i < 4; i++) {
+    const h = 1.6, r0 = 0.3 - i * 0.04, lean = 0.08 + i * 0.05;
+    add(new THREE.CylinderGeometry(r0 - 0.04, r0, h, 6), i % 2 ? 0x7a4e28 : 0x8f6034, M(x + Math.sin(lean) * h / 2, y + h / 2, 0, 0, 0, -lean));
+    x += Math.sin(lean) * h; y += Math.cos(lean) * h * 0.98;
+  }
+  // 7 tàu lá: mỗi tàu 2 đoạn (đoạn trong chếch lên, đoạn ngoài rủ xuống)
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2, col = i % 2 ? 0x3f8a32 : 0x2f6e27;
+    const dx = Math.cos(a), dz = -Math.sin(a);
+    add(new THREE.BoxGeometry(1.7, 0.08, 0.7), col, M(x + dx * 0.8, y + 0.25, dz * 0.8, 0, a, 0.3));
+    add(new THREE.BoxGeometry(1.6, 0.08, 0.5), col, M(x + dx * 2.2, y - 0.05, dz * 2.2, 0, a, -0.55));
+  }
+  for (let i = 0; i < 3; i++) { const a = i * 2.1; add(new THREE.IcosahedronGeometry(0.22), 0x5a3a1a, M(x + Math.cos(a) * 0.3, y - 0.3, -Math.sin(a) * 0.3)); }
+  return mergeGeometries(parts)!;
+}
 const treeN = 220;
-const crowns = new THREE.InstancedMesh(new THREE.ConeGeometry(2, 5, 6), new THREE.MeshStandardMaterial({ color: 0x2c4a26, flatShading: true }), treeN);
+const crowns = new THREE.InstancedMesh(palmGeo(), new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }), treeN);
 for (let i = 0, placed = 0; placed < treeN && i < treeN * 6; i++) {
   const x = BOUNDS.x0 - 40 + Math.random() * (BOUNDS.x1 - BOUNDS.x0 + 80), z = BOUNDS.z0 - 40 + Math.random() * (BOUNDS.z1 - BOUNDS.z0 + 80);
   const pr = project(x, z);
   if (Math.abs(pr.d) < HW + 5 && pr.s > -1 && pr.s < L + 20) continue;
-  const sc = 0.7 + Math.random() * 0.8;
-  crowns.setMatrixAt(placed++, m4.compose(new THREE.Vector3(x, 2.5 * sc, z), new THREE.Quaternion(), new THREE.Vector3(sc, sc, sc)));
+  const sc = 0.7 + Math.random() * 0.6;
+  // xoay ngẫu nhiên quanh trục Y -> các cây nghiêng mỗi cây một hướng, nhìn tự nhiên
+  crowns.setMatrixAt(placed++, m4.compose(new THREE.Vector3(x, 0, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.random() * Math.PI * 2), new THREE.Vector3(sc, sc, sc)));
 }
 scene.add(crowns);
 
