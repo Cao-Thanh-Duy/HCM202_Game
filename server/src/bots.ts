@@ -19,7 +19,7 @@ async function bot(i: number) {
     const go = s.phase === 'play' && (s.torch === 'on' || reckless);
     const me = s.players?.get(room.sessionId);
     let dir = { x: 0, z: 0 };
-    if (go && me) { // đi theo đường chữ S: hướng tới điểm phía trước 4m
+    if (go && me) { // đi theo đường: hướng tới điểm phía trước 4m
       const a = pointAt(project(me.x, me.z).s + 4);
       const dx = a.x - me.x, dz = a.z - me.z, l = Math.hypot(dx, dz) || 1;
       dir = { x: dx / l, z: dz / l };

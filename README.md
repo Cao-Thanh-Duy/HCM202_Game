@@ -67,7 +67,7 @@ q,A,B,C,D,answer,quote
 - Mỗi người **tự trả lời câu hỏi theo nhịp riêng** (panel bên phải, phím 1–4), trả lời liên tục để tích stamina rồi đi một lượt. Thứ tự câu xáo riêng từng người.
 - Panel thu gọn bằng **Q**; **hết stamina thì panel tự bật lên**. Khung hướng dẫn góc trái ẩn/hiện bằng **H**.
 - Đuốc sáng/tắt liên tục suốt ván. Đi khi đuốc tắt → **về khu (checkpoint) gần nhất đã vào**, chưa vào khu nào → **về vạch xuất phát**.
-- **Map chữ S dài 200m** (`shared/path.ts`): đi tự do WASD trong lòng đường, camera xoay theo khúc cua, W luôn là "tiến theo đường".
+- **Map đường thẳng dài 200m** (`shared/path.ts`): đi tự do WASD trong lòng đường, W = tiến theo đường.
 - Khu 1/2/3: đứng trong khu khi trả lời đúng được **+5 / +7 / +10 stamina**, đi nhanh hơn **10%**, và **lưu checkpoint**.
 - **Cạm bẫy** (server random mỗi phòng): 💣 bom → về checkpoint (chưa có → vạch xuất phát); 🚧 hàng rào gai chắn nửa đường → mất 50% stamina (mỗi hàng rào gai phạt 1 lần, bị đưa về sau thì tính lại).
 - Ngân hàng **30 câu**, phát xoay vòng không giới hạn.
@@ -77,7 +77,7 @@ Tất cả thông số nằm trong **`shared/config.ts`**:
 
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
-| `MAP_LENGTH` | 200 | Độ dài đường chữ S (m) |
+| `MAP_LENGTH` | 200 | Độ dài đường (m) |
 | `ROAD_HALF_WIDTH` | 8 | Nửa bề rộng đường (m) |
 | `BOMBS / FENCES` | 10 / 7 | Số bom / hàng rào gai mỗi phòng |
 | `FENCE_STAMINA_MUL` | 0.5 | Vướng rào gai còn 50% stamina |
@@ -100,7 +100,7 @@ Tất cả thông số nằm trong **`shared/config.ts`**:
 
 ```
 shared/config.ts         luật game + khu + màu đội
-shared/path.ts           hình học đường chữ S: chiếu (s,d), kẹp mép, khu, điểm hồi sinh
+shared/path.ts           hình học đường: chiếu (s,d), kẹp mép, khu, điểm hồi sinh
 server/src/index.ts      Express + Colyseus, /health, phục vụ client/dist
 server/src/TorchRoom.ts  phòng chơi: câu hỏi riêng từng người, stamina, đuốc, phạm luật, checkpoint
 server/src/schema.ts     state đồng bộ

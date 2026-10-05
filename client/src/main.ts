@@ -334,7 +334,7 @@ addEventListener('keyup', e => { keys.delete(e.code); updateInput(); });
 addEventListener('blur', () => { keys.clear(); updateInput(); });
 
 // keyIn = phím theo hướng camera (tiến/ngang); input = hướng THẾ GIỚI gửi server.
-// Đường chữ S nên camera xoay theo khúc cua -> phải quy đổi lại liên tục, không chỉ lúc bấm phím.
+// Camera xoay theo hướng đường (nếu sau này làm đường cong) -> quy đổi lại liên tục, không chỉ lúc bấm phím.
 const keyIn = { f: 0, r: 0 };
 let lastSent = 0;
 function updateInput() {

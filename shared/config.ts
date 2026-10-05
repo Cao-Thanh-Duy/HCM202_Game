@@ -1,6 +1,6 @@
 // Config dùng chung cho server + client. Chỉnh luật game ở ĐÂY, không hardcode chỗ khác.
 export const CFG = {
-  MAP_LENGTH: 200,          // m, chiều dài đường đi (đo dọc theo đường chữ S, xem shared/path.ts)
+  MAP_LENGTH: 200,          // m, chiều dài đường thẳng (xem shared/path.ts)
   ROAD_HALF_WIDTH: 8,       // m, nửa bề rộng đường đi được (đi ra ngoài sẽ bị chặn lại ở mép)
   BASE_SPEED: 2,            // m/s — ⚠️ chậm có chủ đích: 10 stamina mất ~5s, dễ vắt qua lúc đuốc tắt -> có hồi hộp
   ZONE_SPEED_BONUS: 0.1,    // +10% tốc độ khi đứng trong khu

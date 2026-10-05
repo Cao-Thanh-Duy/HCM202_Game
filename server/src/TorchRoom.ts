@@ -211,7 +211,7 @@ export class TorchRoom extends Room<GameState> {
         const speed = CFG.BASE_SPEED * (p.zone ? 1 + CFG.ZONE_SPEED_BONUS : 1);
         const step = Math.min(speed * sec, p.stamina);
         const ox = p.x, oz = p.z;
-        // Đi tự do 2D rồi kẹp lại trong lòng đường chữ S
+        // Đi tự do 2D rồi kẹp lại trong lòng đường
         const r = clampToRoad(p.x + inp.x * step, p.z + inp.z * step);
         p.x = r.x; p.z = r.z; p.prog = r.s;
         const moved = Math.hypot(p.x - ox, p.z - oz); // trừ theo quãng THẬT (bị chặn mép thì không mất)

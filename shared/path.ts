@@ -1,14 +1,15 @@
-// Đường đi hình chữ S (dùng chung server + client).
+// Đường đi (dùng chung server + client). Hiện là ĐƯỜNG THẲNG; muốn đổi hình đường chỉ cần sửa hàm sinh điểm `raw` bên dưới.
 // Mọi luật theo vị trí (khu, bẫy, về đích, chặn mép) đều quy về toạ độ đường (s, d):
 //   s = quãng đường dọc tim đường (0 = xuất phát, MAP_LENGTH = đích), d = lệch ngang (+ phải, - trái).
 import { CFG, ZONES } from './config';
 
-const N = 400; // số đoạn lấy mẫu; 400 đủ mượt, project() duyệt hết vẫn rẻ (40 người x 20Hz)
+const N = 50; // số đoạn lấy mẫu; đường thẳng nên ít đoạn là đủ (đường cong thì tăng lên ~400 cho mượt)
 export interface PathPt { x: number; z: number; s: number }
 export const PTS: PathPt[] = [];
 (() => {
-  // 1 chu kỳ sin = chữ S nằm ngang (2 khúc cua). Bán kính cua nhỏ nhất ~19m > nửa bề rộng đường -> không bị chồng lấn
-  const raw = Array.from({ length: N + 1 }, (_, i) => ({ x: 150 * (i / N), z: 32 * Math.sin(2 * Math.PI * (i / N)) }));
+  // Đường thẳng dọc trục X. (Bản chữ S cũ: z = 32 * sin(2π·u) — bỏ theo yêu cầu, giữ lại để tham khảo)
+  // ⚠️ Nếu làm đường cong: bán kính cua phải > ROAD_HALF_WIDTH, không thì 2 mép đường chồng lấn, project() nhảy sai đoạn
+  const raw = Array.from({ length: N + 1 }, (_, i) => ({ x: CFG.MAP_LENGTH * (i / N), z: 0 }));
   const cum = [0];
   for (let i = 1; i <= N; i++) cum.push(cum[i - 1] + Math.hypot(raw[i].x - raw[i - 1].x, raw[i].z - raw[i - 1].z));
   const k = CFG.MAP_LENGTH / cum[N]; // co giãn đều cho đúng chiều dài yêu cầu

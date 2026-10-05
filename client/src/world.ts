@@ -71,7 +71,7 @@ function glowTexture() {
 const box = (w: number, h: number, d: number, color: number, emissive = 0) =>
   new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, emissive, roughness: 0.8 }));
 
-// ---------- Map: đường chữ S ----------
+// ---------- Map: đường thẳng 200m ----------
 // Dải (ribbon) bám theo đường từ quãng s0->s1, lệch ngang d0->d1 -> dùng cho mặt đường, thảm khu, vạch kẻ
 function ribbon(s0: number, s1: number, d0: number, d1: number, y: number, step = 1) {
   const pos: number[] = [], idx: number[] = [];
@@ -429,7 +429,7 @@ export const camDir = { x: 1, z: 0 };
 function updateCamera(dt: number) {
   const a = followId ? avatars.get(followId) : null;
   if (a) {
-    // Góc nhìn thứ 3 bám theo hướng đường chữ S: ngay sau lưng, thấp và gần
+    // Góc nhìn thứ 3 bám theo hướng đường: ngay sau lưng, thấp và gần
     const p = a.g.position, ahead = pointAt(project(p.x, p.z).s + 6); // nhìn trước 6m -> vào cua camera xoay sớm, đỡ chóng mặt
     let fx = ahead.x - p.x, fz = ahead.z - p.z; const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
     const kd = 1 - Math.exp(-dt * 3);
@@ -438,7 +438,7 @@ function updateCamera(dt: number) {
     camPos.set(p.x - camDir.x * 8.5, 5, p.z - camDir.z * 8.5);
     camLook.set(p.x + camDir.x * 12, 1.4, p.z + camDir.z * 12);
   } else {
-    let cx = CX, cz = CZ, span = Math.max(BOUNDS.x1 - BOUNDS.x0, (BOUNDS.z1 - BOUNDS.z0) * 1.8) + 40;
+    let cx = CX, cz = CZ, span = Math.max(BOUNDS.x1 - BOUNDS.x0, (BOUNDS.z1 - BOUNDS.z0) * 1.8) * 0.8 + 10; // đường thẳng dài theo X, màn 16:9 ngang -> thu span cho đường to hơn
     if (hostCam.mode === 'fit' && avatars.size) {
       let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
       avatars.forEach(v => { const q = v.g.position; x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); z0 = Math.min(z0, q.z); z1 = Math.max(z1, q.z); });
