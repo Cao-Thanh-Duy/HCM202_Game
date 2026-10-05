@@ -368,10 +368,17 @@ startLoop(dt => {
   const me = s.players.get(room!.sessionId); if (!me) return;
   if (keyIn.f || keyIn.r) syncInput();
   const len = Math.hypot(input.x, input.z);
-  if (s.phase === 'play' && len && !me.stunned && !me.rank && me.stamina > 0) {
+  // ⚠️ Stamina server gửi về luôn trễ 1 nhịp: phần đã chạy trước (pred lệch khỏi vị trí server) server SẼ trừ tiếp.
+  // Không tính phần này thì hết stamina vẫn nhích thêm rồi bị kéo giật về.
+  const left = me.stamina - Math.hypot(pred.x - me.x, pred.z - me.z);
+  if (s.phase === 'play' && len && !me.stunned && !me.rank && left > 0.01) {
     const speed = CFG.BASE_SPEED * (zoneAt(pred.x, pred.z) ? 1 + CFG.ZONE_SPEED_BONUS : 1);
-    const r = clampToRoad(pred.x + (input.x / len) * speed * dt, pred.z + (input.z / len) * speed * dt); // cùng luật kẹp mép với server
+    const step = Math.min(speed * dt, left); // không đi quá số stamina còn lại (giống server)
+    const r = clampToRoad(pred.x + (input.x / len) * step, pred.z + (input.z / len) * step); // cùng luật kẹp mép với server
     pred.x = r.x; pred.z = r.z;
+  } else { // đứng yên: server không gửi patch nữa -> tự trôi về vị trí server, tránh lệch vĩnh viễn
+    const k = 1 - Math.exp(-dt * 4);
+    pred.x += (me.x - pred.x) * k; pred.z += (me.z - pred.z) * k;
   }
   const a = getAvatar(room!.sessionId); if (a) a.target.copy(pred);
 });

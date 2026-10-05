@@ -430,8 +430,11 @@ function updateCamera(dt: number) {
   const a = followId ? avatars.get(followId) : null;
   if (a) {
     // Góc nhìn thứ 3 bám theo hướng đường: ngay sau lưng, thấp và gần
-    const p = a.g.position, ahead = pointAt(project(p.x, p.z).s + 6); // nhìn trước 6m -> vào cua camera xoay sớm, đỡ chóng mặt
-    let fx = ahead.x - p.x, fz = ahead.z - p.z; const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+    // Luôn hướng camera về NGỌN ĐUỐC ở đích (đường thẳng nên không cần bám khúc cua).
+    // camDir cũng dùng để quy đổi WASD -> W = đi thẳng về phía ngọn đuốc.
+    // ⚠️ Nếu sau này làm lại đường cong: đổi về pointAt(project(p.x, p.z).s + 6), không thì camera nhìn xuyên qua rừng.
+    const p = a.g.position;
+    let fx = TORCH.x - p.x, fz = TORCH.z - p.z; const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
     const kd = 1 - Math.exp(-dt * 3);
     camDir.x += (fx - camDir.x) * kd; camDir.z += (fz - camDir.z) * kd;
     const cl = Math.hypot(camDir.x, camDir.z) || 1; camDir.x /= cl; camDir.z /= cl;
